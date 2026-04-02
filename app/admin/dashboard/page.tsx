@@ -6,20 +6,17 @@ import { useRouter } from 'next/navigation';
 import {
     LayoutDashboard, BookPlus, Library, LogOut,
     Upload, CheckCircle2, AlertTriangle, Trash2, FileText,
-    ChevronLeft, ChevronRight
+    ChevronLeft, ChevronRight, Calendar
 } from 'lucide-react';
 
 export default function AdminDashboard() {
-    // 1. Mặc định là 'list' để vừa vào là thấy danh sách ngay
     const [activeTab, setActiveTab] = useState<'list' | 'add'>('list');
-
     const [file, setFile] = useState<File | null>(null);
     const [title, setTitle] = useState('');
     const [isFree, setIsFree] = useState('true');
     const [loading, setLoading] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-    // --- State Phân Trang ---
     const [books, setBooks] = useState<any[]>([]);
     const [fetching, setFetching] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -39,7 +36,6 @@ export default function AdminDashboard() {
         return "";
     };
 
-    // ✅ Hàm lấy danh sách sách từ API
     const fetchBooks = async (page = 1) => {
         const token = getToken();
         if (!token) return;
@@ -52,8 +48,6 @@ export default function AdminDashboard() {
                     'Content-Type': 'application/json'
                 }
             });
-
-            // Gán dữ liệu từ cấu trúc { items, meta }
             setBooks(res.data.items || []);
             setTotalPages(res.data.meta?.totalPages || 1);
             setCurrentPage(res.data.meta?.currentPage || 1);
@@ -64,12 +58,24 @@ export default function AdminDashboard() {
         }
     };
 
-    // Load data khi tab là 'list' hoặc đổi trang
     useEffect(() => {
         if (activeTab === 'list') {
             fetchBooks(currentPage);
         }
     }, [activeTab, currentPage]);
+
+    // Hàm format ngày giờ sang múi giờ Việt Nam
+    const formatVNTime = (dateString: string) => {
+        if (!dateString) return "---";
+        return new Date(dateString).toLocaleString('vi-VN', {
+            timeZone: 'Asia/Ho_Chi_Minh',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
@@ -106,6 +112,7 @@ export default function AdminDashboard() {
             setFile(null);
             setCurrentPage(1);
             setActiveTab('list');
+            fetchBooks(1);
         } catch (err: any) {
             alert('Có lỗi xảy ra khi upload sách');
         } finally {
@@ -120,7 +127,6 @@ export default function AdminDashboard() {
 
     return (
         <div className="flex min-h-screen bg-[#F8F9FB] antialiased text-slate-900 font-sans">
-            {/* MODAL ĐĂNG XUẤT */}
             {showLogoutModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]">
                     <div className="bg-white rounded-2xl p-8 max-sm w-full shadow-xl border border-slate-100 text-center">
@@ -134,7 +140,6 @@ export default function AdminDashboard() {
                 </div>
             )}
 
-            {/* SIDEBAR */}
             <aside className="w-64 bg-[#0F172A] text-white flex flex-col sticky top-0 h-screen shadow-2xl">
                 <div className="p-6 flex items-center gap-3 border-b border-slate-800/50">
                     <div className="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-500/20"><LayoutDashboard size={20} className="text-white" /></div>
@@ -153,16 +158,14 @@ export default function AdminDashboard() {
                 </div>
             </aside>
 
-            {/* MAIN CONTENT */}
             <main className="flex-1 p-10 overflow-y-auto">
                 <header className="mb-10 flex justify-between items-start">
                     <div>
                         <p className="text-blue-600 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">Quản lý kho</p>
-                        <h2 className="text-3xl font-black text-slate-800 tracking-tight">{activeTab === 'list' ? 'Danh sách sách hiện có' : 'Tải lên tài liệu PDF mới'}</h2>
+                        <h2 className="text-3xl font-black text-slate-800 tracking-tight">{activeTab === 'list' ? 'Danh sách sách hiện có' : 'Tải lên file sách mới'}</h2>
                     </div>
                 </header>
 
-                {/* --- TAB DANH SÁCH --- */}
                 {activeTab === 'list' && (
                     <div className="flex flex-col gap-6">
                         <div className="bg-white rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden">
@@ -170,29 +173,40 @@ export default function AdminDashboard() {
                                 <thead className="bg-slate-50/50 border-b border-slate-100">
                                     <tr>
                                         <th className="px-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Tiêu đề sách</th>
+                                        <th className="px-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Ngày tạo</th>
                                         <th className="px-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Chế độ</th>
                                         <th className="px-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Hành động</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
                                     {fetching ? (
-                                        <tr><td colSpan={3} className="px-10 py-20 text-center text-slate-400 font-bold animate-pulse">Đang tải dữ liệu...</td></tr>
+                                        <tr><td colSpan={4} className="px-10 py-20 text-center text-slate-400 font-bold animate-pulse">Đang tải dữ liệu...</td></tr>
                                     ) : books.length > 0 ? (
                                         books.map((book: any, index: number) => (
                                             <tr key={book._id || index} className="hover:bg-slate-50/50 transition-colors group">
-                                                <td className="px-10 py-5"><div className="flex items-center gap-3 font-bold text-slate-700"><div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><FileText size={16} /></div>{book.title}</div></td>
+                                                <td className="px-10 py-5">
+                                                    <div className="flex items-center gap-3 font-bold text-slate-700">
+                                                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><FileText size={16} /></div>
+                                                        {book.title}
+                                                    </div>
+                                                </td>
+                                                <td className="px-10 py-5 text-center">
+                                                    <div className="flex items-center justify-center gap-2 text-slate-500 text-xs font-bold">
+                                                        <Calendar size={14} className="text-slate-400" />
+                                                        {formatVNTime(book.createdAt)}
+                                                    </div>
+                                                </td>
                                                 <td className="px-10 py-5 text-center"><span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${book.isFree ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>{book.isFree ? 'Miễn phí' : 'VIP'}</span></td>
                                                 <td className="px-10 py-5 text-right"><button className="text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button></td>
                                             </tr>
                                         ))
                                     ) : (
-                                        <tr><td colSpan={3} className="px-10 py-24 text-center text-slate-300 italic font-medium tracking-widest uppercase">Kho dữ liệu trống</td></tr>
+                                        <tr><td colSpan={4} className="px-10 py-24 text-center text-slate-300 italic font-medium tracking-widest uppercase">Kho dữ liệu trống</td></tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
 
-                        {/* --- BỘ ĐIỀU HƯỚNG PHÂN TRANG (PAGINATION) --- */}
                         <div className="flex items-center justify-between px-4 bg-white py-4 rounded-2xl border border-slate-200/60 shadow-sm">
                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Trang <span className="text-blue-600">{currentPage}</span> / {totalPages}</span>
                             <div className="flex gap-2">
@@ -215,7 +229,6 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
-                {/* --- TAB THÊM SÁCH --- */}
                 {activeTab === 'add' && (
                     <div className="max-w-3xl bg-white rounded-[24px] shadow-sm border border-slate-200/60 p-10">
                         <div className="space-y-8">
