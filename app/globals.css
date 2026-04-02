@@ -1,17 +1,28 @@
 @import "tailwindcss";
 
+/* 1. Định nghĩa các biến hệ thống */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Bộ font hệ thống giúp tiếng Việt không bao giờ lỗi nét */
+  --font-system:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+/* 2. Tích hợp vào Theme của Tailwind */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+
+  /* Ép font-sans sử dụng bộ font hệ thống */
+  --font-sans: var(--font-system);
   --font-mono: var(--font-geist-mono);
 }
 
+/* 3. Cấu hình Dark Mode */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -19,8 +30,22 @@
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* 4. Thiết lập cơ bản cho Body (Quan trọng nhất) */
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+
+    /* Sử dụng biến font-system thay vì Arial */
+    font-family: var(--font-system);
+
+    /* Giúp nét chữ mượt hơn trên mọi trình duyệt */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Tối ưu hóa việc hiển thị dấu tiếng Việt */
+    text-rendering: optimizeLegibility;
+  }
 }
+
+/* 5. Loại bỏ các đoạn code ghi đè cũ (Xóa bỏ font-family: Arial) */
