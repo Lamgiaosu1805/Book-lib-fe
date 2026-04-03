@@ -58,6 +58,10 @@ export default function BookList() {
         });
     };
 
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    };
+
     return (
         <div className="flex flex-col gap-6">
             <div className="bg-white rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden">
@@ -67,7 +71,7 @@ export default function BookList() {
                             <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest w-24">Ảnh bìa</th>
                             <th className="px-4 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Tiêu đề sách</th>
                             <th className="px-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Ngày tạo</th>
-                            <th className="px-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Chế độ</th>
+                            <th className="px-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Chế độ / Giá</th>
                             <th className="px-10 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Hành động</th>
                         </tr>
                     </thead>
@@ -92,11 +96,26 @@ export default function BookList() {
                                         </div>
                                     </td>
                                     <td className="px-10 py-5 text-center">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${book.isFree ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
-                                            {book.isFree ? 'Miễn phí' : 'VIP'}
-                                        </span>
+                                        {book.isFree ? (
+                                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-green-100 text-green-600">
+                                                Miễn phí
+                                            </span>
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-1">
+                                                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-600 border border-amber-200">
+                                                    VIP
+                                                </span>
+                                                <span className="text-[11px] font-bold text-slate-600">
+                                                    {book.price ? formatCurrency(book.price) : '0 ₫'}
+                                                </span>
+                                            </div>
+                                        )}
                                     </td>
-                                    <td className="px-10 py-5 text-right"><button className="text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button></td>
+                                    <td className="px-10 py-5 text-right">
+                                        <button className="text-slate-300 hover:text-red-500 transition-colors">
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))
                         ) : (

@@ -31,10 +31,8 @@ export default function AdminDashboard() {
                     </div>
                 </header>
 
-                {/* Gọi Component Tương Ứng */}
                 {activeTab === 'list' && <BookList />}
 
-                {/* Khi AddBook xong, tự chuyển về tab list */}
                 {activeTab === 'add' && <AddBook onSuccess={() => setActiveTab('list')} />}
 
             </main>
