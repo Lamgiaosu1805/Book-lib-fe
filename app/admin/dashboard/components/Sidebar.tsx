@@ -23,7 +23,7 @@ export default function Sidebar({ activeTab, setActiveTab, onOpenLogout }: Sideb
                     <BookPlus size={18} /> Thêm sách mới
                 </button>
             </nav>
-            <div className="p-4 border-t border-slate-800/50">
+            <div className="p-4 border-t border-slate-800/50 mt-auto">
                 <button onClick={onOpenLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 font-bold hover:bg-red-400/10 transition-all"><LogOut size={18} /> Đăng xuất</button>
             </div>
         </aside>

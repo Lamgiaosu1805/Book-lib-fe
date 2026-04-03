@@ -64,7 +64,7 @@ export default function BookList() {
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="bg-white rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden">
+            <div className="bg-white rounded-4xl shadow-sm border border-slate-200/60 overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50/50 border-b border-slate-100">
                         <tr>

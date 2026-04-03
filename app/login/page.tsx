@@ -32,7 +32,7 @@ export default function UserLogin() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-linear-to-tr from-blue-500 via-indigo-500 to-purple-600 p-4">
             <div className="w-full max-w-md bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-10">
                 <div className="text-center mb-10">
                     <div className="inline-block p-3 rounded-2xl bg-indigo-100 text-indigo-600 mb-4">
