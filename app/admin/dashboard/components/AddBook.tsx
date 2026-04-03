@@ -77,7 +77,7 @@ export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
     };
 
     return (
-        <div className="max-w-3xl bg-white rounded-3xl shadow-sm border border-slate-200/60 p-10">
+        <div className="max-w-3xl bg-white rounded-[24px] shadow-sm border border-slate-200/60 p-10">
             <div className="space-y-8">
                 <div className="space-y-2">
                     <label className="text-[13px] font-bold text-slate-700 uppercase tracking-wider ml-1">Tiêu đề sách</label>

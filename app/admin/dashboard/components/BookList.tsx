@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FileText, Calendar, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Calendar, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import PdfThumbnail from './PdfThumbnail';
 
 export default function BookList() {
@@ -11,6 +12,8 @@ export default function BookList() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const limit = 10;
+
+    const router = useRouter();
 
     const getToken = () => {
         const name = "token=";
@@ -63,8 +66,8 @@ export default function BookList() {
     };
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="bg-white rounded-4xl shadow-sm border border-slate-200/60 overflow-hidden">
+        <div className="flex flex-col gap-6 relative">
+            <div className="bg-white rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50/50 border-b border-slate-100">
                         <tr>
@@ -80,7 +83,11 @@ export default function BookList() {
                             <tr><td colSpan={5} className="px-10 py-20 text-center text-slate-400 font-bold animate-pulse">Đang tải dữ liệu...</td></tr>
                         ) : books.length > 0 ? (
                             books.map((book: any, index: number) => (
-                                <tr key={book._id || index} className="hover:bg-slate-50/50 transition-colors group">
+                                <tr
+                                    key={book._id || index}
+                                    onClick={() => router.push(`/admin/dashboard/books/${book._id}`)}
+                                    className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                                >
                                     <td className="px-8 py-4">
                                         <PdfThumbnail bookId={book._id} token={getToken()} />
                                     </td>
@@ -112,7 +119,13 @@ export default function BookList() {
                                         )}
                                     </td>
                                     <td className="px-10 py-5 text-right">
-                                        <button className="text-slate-300 hover:text-red-500 transition-colors">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                // Handle delete
+                                            }}
+                                            className="text-slate-300 hover:text-red-500 transition-colors"
+                                        >
                                             <Trash2 size={18} />
                                         </button>
                                     </td>
