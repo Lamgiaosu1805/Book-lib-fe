@@ -4,39 +4,20 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter, useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { ArrowLeft, Calendar, FileText, Loader2, Tag, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, User, Folder, Clock, FileText, Tag, Info, ShieldCheck } from 'lucide-react';
 
-// =====================================================================
-// ✅ DYNAMIC IMPORT: Đã sửa lại đường dẫn tương đối chuẩn xác
-// =====================================================================
-const SecurePdfViewerNoSSR = dynamic(
-    () => import('../../components/SecurePdfViewer'), // 👈 Đã sửa thành ../../components
-    {
-        ssr: false,
-        loading: () => (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-slate-400 bg-slate-50">
-                <Loader2 className="animate-spin text-blue-500" size={32} />
-                <span className="font-bold text-sm tracking-widest uppercase">Đang khởi động trình xem...</span>
-            </div>
-        )
-    }
-);
-// =====================================================================
+const SecurePdfViewerNoSSR = dynamic(() => import('../../components/SecurePdfViewer'), { ssr: false });
 
 export default function BookDetailPage() {
     const router = useRouter();
     const params = useParams();
-    const bookId = params.id as string;
-
-    const [bookInfo, setBookInfo] = useState<any>(null);
+    const [book, setBook] = useState<any>(null);
     const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-    const [loadingInfo, setLoadingInfo] = useState(true);
-    const [loadingPdf, setLoadingPdf] = useState(true);
+    const [loading, setLoading] = useState(true);
 
     const getToken = () => {
         const name = "token=";
-        const decodedCookie = decodeURIComponent(document.cookie);
-        const ca = decodedCookie.split(';');
+        const ca = document.cookie.split(';');
         for (let i = 0; i < ca.length; i++) {
             let c = ca[i].trim();
             if (c.indexOf(name) === 0) return c.substring(name.length, c.length);
@@ -44,152 +25,85 @@ export default function BookDetailPage() {
         return "";
     };
 
-    // Chặn phím tắt in (Ctrl+P, Ctrl+S)
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.ctrlKey && (e.key === 's' || e.key === 'p')) {
-                e.preventDefault();
-                alert('⛔ Hành động này đã bị vô hiệu hóa!');
-            }
-        };
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, []);
-
-    useEffect(() => {
-        if (!bookId) return;
-
         const token = getToken();
-        if (!token) return router.push('/admin/login');
+        const bookId = params.id;
 
-        // 1. Fetch thông tin sách (JSON)
+        // Lấy thông tin text
         axios.get(`http://localhost:3000/books/${bookId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
-        }).then(res => {
-            setBookInfo(res.data);
-            setLoadingInfo(false);
-        }).catch(err => {
-            console.error("Lỗi lấy thông tin sách:", err);
-            setLoadingInfo(false);
-        });
+        }).then(res => setBook(res.data));
 
-        // 2. Fetch nội dung PDF sách (Blob Stream)
+        // Lấy file PDF
         axios.get(`http://localhost:3000/books/${bookId}/view`, {
             headers: { 'Authorization': `Bearer ${token}` },
             responseType: 'blob'
         }).then(res => {
             setPdfBlob(res.data);
-            setLoadingPdf(false);
-        }).catch(err => {
-            console.error("Lỗi lấy file PDF:", err);
-            setLoadingPdf(false);
+            setLoading(false);
         });
+    }, [params.id]);
 
-    }, [bookId]);
-
-    const formatVNTime = (dateString: string) => {
-        if (!dateString) return "---";
-        return new Date(dateString).toLocaleString('vi-VN', {
-            timeZone: 'Asia/Ho_Chi_Minh',
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        });
-    };
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-    };
+    if (!book) return <div className="p-20 text-center font-bold text-slate-400">Đang tải dữ liệu sách...</div>;
 
     return (
-        <div className="min-h-screen bg-[#F8F9FB] antialiased text-slate-900 font-sans p-6 md:p-10 flex flex-col items-center">
-
-            {/* CSS chặn in trang */}
-            <style jsx global>{`
-                @media print {
-                    body { display: none !important; }
-                }
-            `}</style>
-
+        <div className="min-h-screen bg-[#F8F9FB] p-6 md:p-10 flex flex-col items-center">
             <div className="w-full max-w-6xl">
-
-                <button
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl font-bold text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all mb-8 shadow-sm w-fit"
-                >
-                    <ArrowLeft size={16} /> Quay lại danh sách
+                <button onClick={() => router.back()} className="flex items-center gap-2 mb-8 font-bold text-slate-500 hover:text-blue-600 transition-all">
+                    <ArrowLeft size={20} /> Quay lại
                 </button>
 
-                {/* KHU VỰC THÔNG TIN SÁCH */}
-                {loadingInfo ? (
-                    <div className="bg-white rounded-3xl p-10 flex justify-center shadow-sm border border-slate-200">
-                        <Loader2 className="animate-spin text-blue-500" size={32} />
-                    </div>
-                ) : bookInfo ? (
-                    <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200/60 mb-8">
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                {/* THÔNG TIN CHI TIẾT */}
+                <div className="bg-white rounded-[32px] p-8 border border-slate-200/60 shadow-sm mb-8 grid grid-cols-1 md:grid-cols-3 gap-10">
+                    <div className="md:col-span-2 space-y-6">
+                        <h1 className="text-4xl font-black text-slate-800 leading-tight">{book.title}</h1>
 
-                            <div className="flex-1 space-y-4">
-                                <h1 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><FileText size={24} /></div>
-                                    {bookInfo.title}
-                                </h1>
-
-                                <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-slate-500">
-                                    <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-                                        <Calendar size={16} className="text-slate-400" />
-                                        Ngày đăng: {formatVNTime(bookInfo.createdAt)}
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-                                        <CheckCircle2 size={16} className={bookInfo.isFree ? "text-green-500" : "text-amber-500"} />
-                                        Loại: {bookInfo.isFree ? "Miễn phí" : "VIP"}
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full border border-green-100 text-green-700">
-                                        <ShieldCheck size={16} className="text-green-500" />
-                                        Đã bảo mật nội dung
-                                    </div>
-                                </div>
+                        <div className="flex flex-wrap gap-4">
+                            <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-slate-600 font-bold text-sm">
+                                <User size={16} /> {book.author}
                             </div>
-
-                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 min-w-[200px] flex flex-col items-center justify-center text-center">
-                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                                    <Tag size={12} /> Giá Bán
-                                </p>
-                                {bookInfo.isFree ? (
-                                    <span className="text-2xl font-black text-green-500 uppercase">Miễn phí</span>
-                                ) : (
-                                    <span className="text-3xl font-black text-amber-500">{formatCurrency(bookInfo.price || 0)}</span>
-                                )}
+                            <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-slate-600 font-bold text-sm">
+                                <Folder size={16} /> {book.category}
                             </div>
+                            <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-slate-600 font-bold text-sm">
+                                <Clock size={16} /> {book.publishedYear}
+                            </div>
+                        </div>
 
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-slate-800 font-black text-xs uppercase tracking-widest">
+                                <Info size={14} className="text-blue-500" /> Tóm tắt nội dung
+                            </div>
+                            <p className="text-slate-500 leading-relaxed font-medium">
+                                {book.description || "Cuốn sách này chưa có mô tả chi tiết."}
+                            </p>
                         </div>
                     </div>
-                ) : (
-                    <div className="text-center text-slate-500 font-bold p-10">Không tìm thấy thông tin sách</div>
-                )}
 
-                {/* KHU VỰC HIỂN THỊ SÁCH BẢO MẬT */}
-                <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/60 h-[850px] flex flex-col relative overflow-hidden">
-                    <div className="flex items-center gap-2 px-4 pb-4 pt-2 border-b border-slate-100 mb-4 bg-white z-10">
-                        <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                        <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-                        <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                        <span className="ml-2 text-xs font-black text-slate-300 uppercase tracking-widest">Trình đọc sách bảo mật</span>
-                    </div>
-
-                    <div className="flex-1 rounded-2xl relative flex justify-center items-center overflow-hidden bg-slate-100/50">
-                        {loadingPdf ? (
-                            <div className="flex flex-col items-center gap-3 text-slate-400">
-                                <Loader2 className="animate-spin text-blue-500" size={40} />
-                                <span className="font-bold text-sm tracking-widest uppercase">Đang nạp dữ liệu sách...</span>
-                            </div>
-                        ) : pdfBlob ? (
-                            <SecurePdfViewerNoSSR pdfUrl={pdfBlob} />
-                        ) : (
-                            <p className="text-slate-500 font-bold">Lỗi: Không thể hiển thị tài liệu này</p>
-                        )}
+                    <div className="space-y-4">
+                        <div className="bg-blue-600 rounded-3xl p-8 text-white text-center shadow-xl shadow-blue-200">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-2">Giá sở hữu</p>
+                            <h2 className="text-3xl font-black italic">
+                                {book.isFree ? "MIỄN PHÍ" : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(book.price)}
+                            </h2>
+                        </div>
+                        <div className="flex items-center justify-center gap-2 p-4 bg-white border border-green-100 rounded-2xl text-green-600 font-bold text-xs uppercase tracking-widest shadow-sm">
+                            <ShieldCheck size={16} /> Tài liệu đã bảo mật
+                        </div>
                     </div>
                 </div>
 
+                {/* TRÌNH XEM PDF */}
+                <div className="h-[900px] rounded-[32px] overflow-hidden border border-slate-200 bg-white shadow-sm relative">
+                    {loading ? (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+                            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            <p className="mt-4 font-black text-slate-400 text-xs uppercase tracking-widest">Đang giải mã PDF...</p>
+                        </div>
+                    ) : (
+                        <SecurePdfViewerNoSSR pdfUrl={pdfBlob} />
+                    )}
+                </div>
             </div>
         </div>
     );
