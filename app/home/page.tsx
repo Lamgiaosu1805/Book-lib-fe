@@ -26,7 +26,6 @@ export default function HomePage() {
     const [readingBook, setReadingBook] = useState<any>(null);
     const [readMode, setReadMode] = useState<'preview' | 'full'>('preview');
 
-    // ✅ ĐỔI THÀNH pdfBlob để truyền thẳng vào SecurePdfViewer (giống bên Admin)
     const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
     const [loadingPdf, setLoadingPdf] = useState(false);
 
@@ -91,7 +90,7 @@ export default function HomePage() {
         setReadingBook(book);
         setReadMode(mode);
         setLoadingPdf(true);
-        setPdfBlob(null); // Xóa dữ liệu cũ
+        setPdfBlob(null);
 
         const token = getToken();
         try {
@@ -101,7 +100,6 @@ export default function HomePage() {
                 responseType: 'blob'
             });
 
-            // ✅ Lưu thẳng Blob nhị phân, không cần dùng URL.createObjectURL nữa
             setPdfBlob(res.data);
         } catch (err) {
             console.error("Lỗi tải PDF:", err);
@@ -114,7 +112,7 @@ export default function HomePage() {
 
     const closeReader = () => {
         setReadingBook(null);
-        setPdfBlob(null); // Giải phóng RAM
+        setPdfBlob(null);
     };
 
     const isOwned = (bookId: string) => {
@@ -144,6 +142,7 @@ export default function HomePage() {
             </header>
 
             <main className="max-w-7xl mx-auto px-6 mt-10">
+                {/* TABS & SEARCH */}
                 <div className="flex flex-col md:flex-row gap-6 justify-between items-center mb-10">
                     <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200/60 w-full md:w-auto">
                         <button
@@ -181,8 +180,16 @@ export default function HomePage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
                         {filteredBooks.map((book) => {
                             const owned = isOwned(book._id);
+
                             return (
-                                <div key={book._id} className="bg-white rounded-[24px] border border-slate-200/60 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group relative">
+                                <div
+                                    key={book._id}
+                                    // ✅ CHỈNH SỬA: Click vào thẻ sẽ mở reader. 
+                                    // Nếu đã có sách hoặc sách Free thì mở Full, ngược lại mở Preview.
+                                    onClick={() => openReader(book, (owned || book.isFree) ? 'full' : 'preview')}
+                                    className="bg-white rounded-[24px] border border-slate-200/60 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group relative cursor-pointer active:scale-[0.98]"
+                                >
+                                    {/* PHẦN HÌNH ẢNH */}
                                     <div className="h-72 bg-slate-200 relative overflow-hidden flex items-center justify-center">
                                         <div className="absolute inset-0 w-full h-full flex items-center justify-center overflow-hidden 
                                             [&_canvas]:!w-full [&_canvas]:!h-full [&_canvas]:!object-cover 
@@ -204,23 +211,34 @@ export default function HomePage() {
                                         )}
                                     </div>
 
+                                    {/* THÔNG TIN SÁCH */}
                                     <div className="p-5 flex flex-col flex-1 bg-white">
-                                        <h3 className="font-black text-slate-800 text-lg leading-tight line-clamp-2 mb-1 uppercase">{book.title}</h3>
+                                        <h3 className="font-black text-slate-800 text-lg leading-tight line-clamp-2 mb-1 uppercase group-hover:text-indigo-600 transition-colors">
+                                            {book.title}
+                                        </h3>
                                         <p className="text-slate-500 text-xs font-bold mb-4">{book.author || 'Tác giả ẩn danh'}</p>
 
                                         <div className="mt-auto space-y-2">
+                                            {/* Trạng thái nút chỉ mang tính minh họa, card đã nhận sự kiện click */}
                                             {owned || book.isFree ? (
-                                                <button onClick={() => openReader(book, 'full')} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-md active:scale-95">
+                                                <div className="w-full py-3 bg-indigo-600 group-hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-md text-center">
                                                     Đọc sách ngay
-                                                </button>
+                                                </div>
                                             ) : (
-                                                <button onClick={() => openReader(book, 'preview')} className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-all active:scale-95">
+                                                <div className="w-full py-3 bg-slate-100 group-hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-all text-center">
                                                     Đọc thử 1 trang
-                                                </button>
+                                                </div>
                                             )}
 
                                             {!owned && (
-                                                <button onClick={() => handleAddToLibrary(book._id, book.isFree)} className={`w-full py-3 flex items-center justify-center gap-2 rounded-xl font-bold text-sm transition-all active:scale-95 border-2 ${book.isFree ? 'border-indigo-100 text-indigo-600 hover:bg-indigo-50' : 'border-amber-100 text-amber-600 hover:bg-amber-50'}`}>
+                                                <button
+                                                    // ✅ QUAN TRỌNG: stopPropagation để khi bấm nút mua không bị kích hoạt mở reader của card cha
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleAddToLibrary(book._id, book.isFree);
+                                                    }}
+                                                    className={`w-full py-3 flex items-center justify-center gap-2 rounded-xl font-bold text-sm transition-all active:scale-95 border-2 relative z-30 ${book.isFree ? 'border-indigo-100 text-indigo-600 hover:bg-indigo-50' : 'border-amber-100 text-amber-600 hover:bg-amber-50'}`}
+                                                >
                                                     <ShoppingCart size={16} />
                                                     {book.isFree ? 'Thêm vào tủ' : 'Mua ngay'}
                                                 </button>
@@ -258,13 +276,13 @@ export default function HomePage() {
                         ) : (
                             pdfBlob && (
                                 <div className="w-full h-full relative rounded-2xl overflow-hidden shadow-2xl">
-
-                                    {/* BẢNG THÔNG BÁO MUA SÁCH (DÀNH CHO CHẾ ĐỘ PREVIEW) */}
+                                    {/* THÔNG BÁO MUA SÁCH (CHẾ ĐỘ PREVIEW) */}
                                     {readMode === 'preview' && !isOwned(readingBook._id) && !readingBook.isFree && (
                                         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur px-8 py-5 rounded-2xl shadow-2xl text-center border border-slate-200 animate-in slide-in-from-bottom-10">
                                             <p className="font-bold text-slate-800 mb-3">Bạn đang xem bản đọc thử.</p>
                                             <button
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
                                                     closeReader();
                                                     handleAddToLibrary(readingBook._id, false);
                                                 }}
@@ -275,7 +293,6 @@ export default function HomePage() {
                                         </div>
                                     )}
 
-                                    {/* ✅ GỌI COMPONENT SECURE PDF VIEWER */}
                                     <SecurePdfViewerNoSSR pdfUrl={pdfBlob} />
                                 </div>
                             )
