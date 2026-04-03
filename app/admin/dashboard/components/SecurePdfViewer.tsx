@@ -13,37 +13,62 @@ interface SecurePdfViewerProps {
 
 export default function SecurePdfViewer({ pdfUrl }: SecurePdfViewerProps) {
     const [numPages, setNumPages] = useState<number>(0);
-    const [activePage, setActivePage] = useState<number>(1); // ✅ Lưu trang đang xem
+    const [activePage, setActivePage] = useState<number>(1);
     const [scale, setScale] = useState<number>(1.2);
     const [loading, setLoading] = useState(true);
-    const containerRef = useRef<HTMLDivElement>(null);
 
-    // ✅ LOGIC: Nhận diện trang khi cuộn
+    const containerRef = useRef<HTMLDivElement>(null);
+    // ✅ THÊM MỚI: Dùng Set để lưu danh sách TẤT CẢ các trang đang hiển thị trên màn hình
+    const visiblePages = useRef<Set<number>>(new Set());
+
+    // ✅ LOGIC ĐÃ SỬA: Nhận diện trang chính xác 100%
     useEffect(() => {
+        if (numPages === 0 || loading) return;
+
         const observer = new IntersectionObserver(
             (entries) => {
+                let hasChanges = false;
+
                 entries.forEach((entry) => {
-                    // Nếu trang đó chiếm hơn 50% diện tích hiển thị
+                    const pageNum = Number(entry.target.getAttribute('data-page-number'));
+
                     if (entry.isIntersecting) {
-                        const pageNum = Number(entry.target.getAttribute('data-page-number'));
-                        setActivePage(pageNum);
+                        // Nếu trang lọt vào khung hình -> Thêm vào Set
+                        visiblePages.current.add(pageNum);
+                        hasChanges = true;
+                    } else {
+                        // Nếu trang bị cuộn khuất đi -> Xóa khỏi Set
+                        if (visiblePages.current.has(pageNum)) {
+                            visiblePages.current.delete(pageNum);
+                            hasChanges = true;
+                        }
                     }
                 });
+
+                // Sau khi tính toán xong, tìm trang nhỏ nhất (trang trên cùng) đang hiển thị
+                if (hasChanges && visiblePages.current.size > 0) {
+                    const topVisiblePage = Math.min(...Array.from(visiblePages.current));
+                    setActivePage(topVisiblePage);
+                }
             },
             {
-                root: containerRef.current, // Theo dõi bên trong khung cuộn
-                threshold: 0.5, // Ngưỡng 50% diện tích trang xuất hiện
+                root: containerRef.current,
+                // Giảm threshold xuống 0.2 (20%). Rất quan trọng khi bạn Zoom In quá to, 
+                // trang PDF sẽ lớn hơn cả màn hình, nếu để 0.5 nó sẽ không bao giờ nhận diện được.
+                threshold: 0.2,
+                rootMargin: "-10% 0px -10% 0px" // Bỏ qua 10% đỉnh và đáy màn hình để bắt nét chính xác ở giữa
             }
         );
 
-        // Lấy tất cả các thẻ bao quanh trang để theo dõi
         const pageElements = document.querySelectorAll('.pdf-page-wrapper');
         pageElements.forEach((el) => observer.observe(el));
 
         return () => {
             pageElements.forEach((el) => observer.unobserve(el));
+            // Reset bộ nhớ khi unmount
+            visiblePages.current.clear();
         };
-    }, [numPages, loading]); // Chạy lại khi nạp xong số trang
+    }, [numPages, loading]);
 
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
         setNumPages(numPages);
@@ -65,7 +90,6 @@ export default function SecurePdfViewer({ pdfUrl }: SecurePdfViewerProps) {
             {/* THANH ĐIỀU KHIỂN CỐ ĐỊNH */}
             <div className="p-3 border-b border-slate-200 bg-white flex items-center justify-between sticky top-0 z-10 shadow-sm">
 
-                {/* Hiển thị trang đang xem */}
                 <div className="flex items-center gap-2 bg-blue-50 px-4 py-1.5 rounded-xl border border-blue-100">
                     <Bookmark size={16} className="text-blue-500" />
                     <span className="text-sm font-bold text-slate-700">
@@ -73,7 +97,6 @@ export default function SecurePdfViewer({ pdfUrl }: SecurePdfViewerProps) {
                     </span>
                 </div>
 
-                {/* Bộ thu phóng */}
                 <div className="flex items-center gap-2">
                     <button onClick={() => changeScale(-0.2)} disabled={scale <= 0.5} className="p-2 bg-slate-100 rounded-xl hover:bg-blue-100 disabled:opacity-50 transition-all">
                         <ZoomOut size={18} />
@@ -106,7 +129,6 @@ export default function SecurePdfViewer({ pdfUrl }: SecurePdfViewerProps) {
                     className="flex flex-col items-center gap-8 w-full"
                 >
                     {Array.from(new Array(numPages), (el, index) => (
-                        // ✅ Bọc Page trong một div để Intersection Observer theo dõi
                         <div
                             key={`page_${index + 1}`}
                             className="pdf-page-wrapper"

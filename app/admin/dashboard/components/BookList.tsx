@@ -67,7 +67,10 @@ export default function BookList() {
                                 className="hover:bg-slate-50/50 transition-colors cursor-pointer group"
                             >
                                 <td className="px-8 py-4">
-                                    <PdfThumbnail bookId={book._id} token={getToken()} />
+                                    {/* ✅ ĐIỂM SỬA QUAN TRỌNG: Bọc div w-14 h-20 ở đây */}
+                                    <div className="w-14 h-20 rounded-md overflow-hidden border border-slate-200 shadow-sm relative bg-white">
+                                        <PdfThumbnail bookId={String(book._id)} token={getToken()} />
+                                    </div>
                                 </td>
                                 <td className="px-4 py-4">
                                     <div className="flex flex-col gap-1">
@@ -90,7 +93,14 @@ export default function BookList() {
                                     )}
                                 </td>
                                 <td className="px-8 py-4 text-right">
-                                    <button className="text-slate-300 hover:text-red-500 transition-colors p-2"><Trash2 size={18} /></button>
+                                    <button
+                                        className="text-slate-300 hover:text-red-500 transition-colors p-2"
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // Ngăn không cho click vào nút xóa bị nhảy trang
+                                        }}
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
                                 </td>
                             </tr>
                         ))}

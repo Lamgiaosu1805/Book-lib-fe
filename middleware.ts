@@ -3,59 +3,59 @@ import { NextRequest } from "next/server";
 import { jwtDecode } from "jwt-decode";
 
 export function middleware(req: NextRequest) {
-  const token = req.cookies.get("token")?.value;
+  // Đã phân tách: User dùng 'user_token', Admin dùng 'token'
+  const userToken = req.cookies.get("user_token")?.value;
+  const adminToken = req.cookies.get("token")?.value;
   const { pathname } = req.nextUrl;
+
+  const now = Date.now() / 1000;
 
   // ================= ROOT "/" =================
   if (pathname === "/") {
-    if (!token) {
-      return NextResponse.redirect(new URL("/login", req.url));
+    // Ưu tiên User
+    if (userToken) {
+      try {
+        const decoded: any = jwtDecode(userToken);
+        if (decoded.role === "user" && (!decoded.exp || decoded.exp > now)) {
+          return NextResponse.redirect(new URL("/home", req.url));
+        }
+      } catch {}
     }
 
-    try {
-      const decoded: any = jwtDecode(token);
-
-      if (decoded.role === "admin") {
-        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
-      }
-
-      if (decoded.role === "user") {
-        return NextResponse.redirect(new URL("/home", req.url));
-      }
-    } catch {
-      return NextResponse.redirect(new URL("/login", req.url));
+    // Nếu không có User nhưng có Admin
+    if (adminToken) {
+      try {
+        const decoded: any = jwtDecode(adminToken);
+        if (decoded.role === "admin" && (!decoded.exp || decoded.exp > now)) {
+          return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+        }
+      } catch {}
     }
+
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   // ================= ADMIN =================
   if (pathname.startsWith("/admin")) {
     if (pathname === "/admin/login") {
-      if (token) {
+      if (adminToken) {
         try {
-          const decoded: any = jwtDecode(token);
-
-          if (decoded.role === "admin") {
+          const decoded: any = jwtDecode(adminToken);
+          if (decoded.role === "admin" && (!decoded.exp || decoded.exp > now)) {
             return NextResponse.redirect(new URL("/admin/dashboard", req.url));
           }
         } catch {}
       }
-
       return NextResponse.next();
     }
 
-    if (!token) {
+    if (!adminToken) {
       return NextResponse.redirect(new URL("/admin/login", req.url));
     }
 
     try {
-      const decoded: any = jwtDecode(token);
-
-      if (decoded.role !== "admin") {
-        return NextResponse.redirect(new URL("/", req.url));
-      }
-
-      const now = Date.now() / 1000;
-      if (decoded.exp && decoded.exp < now) {
+      const decoded: any = jwtDecode(adminToken);
+      if (decoded.role !== "admin" || (decoded.exp && decoded.exp < now)) {
         return NextResponse.redirect(new URL("/admin/login", req.url));
       }
     } catch {
@@ -65,37 +65,25 @@ export function middleware(req: NextRequest) {
 
   // ================= USER =================
   if (pathname === "/login") {
-    if (token) {
+    if (userToken) {
       try {
-        const decoded: any = jwtDecode(token);
-
-        if (decoded.role === "user") {
+        const decoded: any = jwtDecode(userToken);
+        if (decoded.role === "user" && (!decoded.exp || decoded.exp > now)) {
           return NextResponse.redirect(new URL("/home", req.url));
-        }
-
-        if (decoded.role === "admin") {
-          return NextResponse.redirect(new URL("/admin/dashboard", req.url));
         }
       } catch {}
     }
-
     return NextResponse.next();
   }
 
   if (pathname.startsWith("/home")) {
-    if (!token) {
+    if (!userToken) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
     try {
-      const decoded: any = jwtDecode(token);
-
-      if (decoded.role !== "user") {
-        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
-      }
-
-      const now = Date.now() / 1000;
-      if (decoded.exp && decoded.exp < now) {
+      const decoded: any = jwtDecode(userToken);
+      if (decoded.role !== "user" || (decoded.exp && decoded.exp < now)) {
         return NextResponse.redirect(new URL("/login", req.url));
       }
     } catch {
