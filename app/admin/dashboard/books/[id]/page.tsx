@@ -30,12 +30,12 @@ export default function BookDetailPage() {
         const bookId = params.id;
 
         // Lấy thông tin text
-        axios.get(`http://localhost:3001/books/${bookId}`, {
+        axios.get(`https://elib.tgphanoi.org/api/books/${bookId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         }).then(res => setBook(res.data));
 
         // Lấy file PDF
-        axios.get(`http://localhost:3001/books/${bookId}/view`, {
+        axios.get(`https://elib.tgphanoi.org/api/books/${bookId}/view`, {
             headers: { 'Authorization': `Bearer ${token}` },
             responseType: 'blob'
         }).then(res => {

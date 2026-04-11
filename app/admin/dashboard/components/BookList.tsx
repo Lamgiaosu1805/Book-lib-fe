@@ -29,7 +29,7 @@ export default function BookList() {
         if (!token) return;
         setFetching(true);
         try {
-            const res = await axios.get(`http://localhost:3001/books?page=${page}&limit=${limit}`, {
+            const res = await axios.get(`https://elib.tgphanoi.org/api/books?page=${page}&limit=${limit}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setBooks(res.data.items || []);

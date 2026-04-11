@@ -15,7 +15,7 @@ export default function AdminLogin() {
         setLoading(true);
 
         try {
-            const res = await axios.post('http://localhost:3001/admin/login', {
+            const res = await axios.post('https://elib.tgphanoi.org/api/admin/login', {
                 email,
                 password,
             });

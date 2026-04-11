@@ -15,7 +15,7 @@ export default function PdfViewerModal({ bookId, token, onClose }: PdfViewerModa
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        axios.get(`http://localhost:3001/books/${bookId}/view`, {
+        axios.get(`https://elib.tgphanoi.org/api/books/${bookId}/view`, {
             headers: { 'Authorization': `Bearer ${token}` },
             responseType: 'blob'
         }).then(res => {

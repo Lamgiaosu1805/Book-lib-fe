@@ -25,7 +25,7 @@ export default function CategoryList() {
         const token = getToken();
         if (!token) return;
         try {
-            const res = await axios.get('http://localhost:3001/categories', {
+            const res = await axios.get('https://elib.tgphanoi.org/api/categories', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setCategories(res.data);
@@ -42,7 +42,7 @@ export default function CategoryList() {
         if (!name.trim()) return alert('Vui lòng nhập tên danh mục!');
         setLoading(true);
         try {
-            await axios.post('http://localhost:3001/categories', { name }, {
+            await axios.post('https://elib.tgphanoi.org/api/categories', { name }, {
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             });
             setName('');
@@ -57,7 +57,7 @@ export default function CategoryList() {
     const handleDelete = async (id: string) => {
         if (!confirm('Bạn có chắc muốn xóa danh mục này?')) return;
         try {
-            await axios.delete(`http://localhost:3001/categories/${id}`, {
+            await axios.delete(`https://elib.tgphanoi.org/api/categories/${id}`, {
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             });
             fetchCategories();

@@ -49,12 +49,12 @@ export default function HomePage() {
         }
 
         try {
-            const resBooks = await axios.get('http://localhost:3001/books?limit=100', {
+            const resBooks = await axios.get('https://elib.tgphanoi.org/api/books?limit=100', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setBooks(resBooks.data.items || []);
 
-            const resLib = await axios.get('http://localhost:3001/user/library', {
+            const resLib = await axios.get('https://elib.tgphanoi.org/api/user/library', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setMyLibrary(resLib.data || []);
@@ -76,7 +76,7 @@ export default function HomePage() {
         if (!confirm(confirmMsg)) return;
 
         try {
-            await axios.post(`http://localhost:3001/user/library/add/${bookId}`, {}, {
+            await axios.post(`https://elib.tgphanoi.org/api/user/library/add/${bookId}`, {}, {
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             });
             alert(isFree ? 'Đã thêm vào tủ sách!' : 'Thanh toán thành công!');
@@ -95,7 +95,7 @@ export default function HomePage() {
         const token = getToken();
         try {
             const endpoint = mode === 'preview' ? 'preview' : 'view';
-            const res = await axios.get(`http://localhost:3001/books/${book._id}/${endpoint}`, {
+            const res = await axios.get(`https://elib.tgphanoi.org/api/books/${book._id}/${endpoint}`, {
                 headers: { 'Authorization': `Bearer ${token}` },
                 responseType: 'blob'
             });
