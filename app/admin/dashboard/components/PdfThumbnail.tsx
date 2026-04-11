@@ -24,7 +24,7 @@ const PdfThumbnail: React.FC<PdfThumbnailProps> = ({ bookId, token }) => {
             return;
         }
 
-        axios.get(`http://localhost:3000/books/${bookId}/preview`, {
+        axios.get(`http://localhost:3001/books/${bookId}/preview`, {
             headers: { 'Authorization': `Bearer ${token}` },
             responseType: 'blob'
         }).then(res => {

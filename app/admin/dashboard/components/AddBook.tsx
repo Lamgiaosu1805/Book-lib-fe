@@ -37,7 +37,7 @@ export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
             const token = getToken();
             if (!token) return;
             try {
-                const res = await axios.get('http://localhost:3000/categories', {
+                const res = await axios.get('http://localhost:3001/categories', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setCategories(res.data);
@@ -66,7 +66,7 @@ export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
             formData.append('isFree', isFree);
             formData.append('price', isFree === 'true' ? '0' : price);
 
-            await axios.post('http://localhost:3000/books/upload', formData, {
+            await axios.post('http://localhost:3001/books/upload', formData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',

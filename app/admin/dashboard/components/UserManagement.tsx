@@ -27,7 +27,7 @@ export default function UserManagement() {
         if (!token) return;
 
         try {
-            const res = await axios.get('http://localhost:3000/user/admin/all', {
+            const res = await axios.get('http://localhost:3001/user/admin/all', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setAllUsers(res.data);
@@ -46,7 +46,7 @@ export default function UserManagement() {
     const handleSuspend = async (id: string, email: string) => {
         if (!confirm(`Xác nhận đình chỉ tài khoản: ${email}?`)) return;
         try {
-            await axios.delete(`http://localhost:3000/user/admin/${id}`, {
+            await axios.delete(`http://localhost:3001/user/admin/${id}`, {
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             });
             fetchUsers();
@@ -59,7 +59,7 @@ export default function UserManagement() {
     const handleRestore = async (id: string, email: string) => {
         if (!confirm(`Xác nhận khôi phục tài khoản: ${email}?`)) return;
         try {
-            await axios.patch(`http://localhost:3000/user/admin/${id}/restore`, {}, {
+            await axios.patch(`http://localhost:3001/user/admin/${id}/restore`, {}, {
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             });
             fetchUsers();

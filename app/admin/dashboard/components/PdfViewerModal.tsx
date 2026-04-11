@@ -15,7 +15,7 @@ export default function PdfViewerModal({ bookId, token, onClose }: PdfViewerModa
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        axios.get(`http://localhost:3000/books/${bookId}/view`, {
+        axios.get(`http://localhost:3001/books/${bookId}/view`, {
             headers: { 'Authorization': `Bearer ${token}` },
             responseType: 'blob'
         }).then(res => {
