@@ -10,6 +10,10 @@ export default function ProfilePage() {
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    const [displayName, setDisplayName] = useState('');
+    const [editingName, setEditingName] = useState(false);
+    const [savingName, setSavingName] = useState(false);
+
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmNew, setConfirmNew] = useState('');
@@ -31,10 +35,24 @@ export default function ProfilePage() {
         if (!token) { router.push('/login'); return; }
 
         api.get('/user/profile', { headers: { Authorization: `Bearer ${token}` } })
-            .then(res => setProfile(res.data))
+            .then(res => { setProfile(res.data); setDisplayName(res.data.displayName || ''); })
             .catch(() => router.push('/login'))
             .finally(() => setLoading(false));
     }, []);
+
+    const handleSaveName = async () => {
+        setSavingName(true);
+        try {
+            await api.patch('/user/profile', { displayName }, { headers: { Authorization: `Bearer ${getToken()}` } });
+            setProfile((p: any) => ({ ...p, displayName }));
+            setEditingName(false);
+            showToast('success', 'Cập nhật tên thành công!');
+        } catch {
+            showToast('error', 'Có lỗi xảy ra');
+        } finally {
+            setSavingName(false);
+        }
+    };
 
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -98,11 +116,37 @@ export default function ProfilePage() {
                     <div className="space-y-4">
                         <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
                             <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-black text-lg">
-                                {profile?.email?.charAt(0).toUpperCase()}
+                                {(profile?.displayName || profile?.email)?.charAt(0).toUpperCase()}
                             </div>
-                            <div>
-                                <p className="font-black text-slate-800">{profile?.email}</p>
-                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">Thành viên</p>
+                            <div className="flex-1 min-w-0">
+                                {editingName ? (
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={displayName}
+                                            onChange={e => setDisplayName(e.target.value)}
+                                            placeholder="Nhập tên hiển thị..."
+                                            className="flex-1 px-3 py-1.5 rounded-xl border border-indigo-300 bg-white outline-none focus:ring-2 focus:ring-indigo-200 font-bold text-sm"
+                                            autoFocus
+                                        />
+                                        <button onClick={handleSaveName} disabled={savingName} className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs transition-all">
+                                            {savingName ? '...' : 'Lưu'}
+                                        </button>
+                                        <button onClick={() => { setEditingName(false); setDisplayName(profile?.displayName || ''); }} className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl font-bold text-xs transition-all">
+                                            Hủy
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-black text-slate-800 truncate">
+                                            {profile?.displayName || <span className="text-slate-400 font-medium italic">Chưa có tên</span>}
+                                        </p>
+                                        <button onClick={() => setEditingName(true)} className="text-xs text-indigo-500 hover:text-indigo-700 font-bold shrink-0">
+                                            Sửa
+                                        </button>
+                                    </div>
+                                )}
+                                <p className="text-xs text-slate-400 font-medium mt-0.5 truncate">{profile?.email}</p>
                             </div>
                         </div>
 
