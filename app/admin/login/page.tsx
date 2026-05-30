@@ -69,7 +69,7 @@ export default function AdminLogin() {
                             <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: '#C9A227' }}>Tên đăng nhập hoặc Email</label>
                             <input type="text" required value={identifier} onChange={e => setIdentifier(e.target.value)}
                                 placeholder="lamnk hoặc admin@example.com"
-                                className="w-full px-4 py-3 rounded-xl outline-none text-sm transition-all"
+                                className="input-dark w-full px-4 py-3 rounded-xl outline-none text-sm transition-all"
                                 style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(201,162,39,0.2)', color: 'white' }}
                                 onFocus={e => { e.target.style.borderColor = 'rgba(201,162,39,0.6)'; e.target.style.background = 'rgba(255,255,255,0.1)'; }}
                                 onBlur={e => { e.target.style.borderColor = 'rgba(201,162,39,0.2)'; e.target.style.background = 'rgba(255,255,255,0.07)'; }}/>
@@ -79,7 +79,7 @@ export default function AdminLogin() {
                             <div className="relative">
                                 <input type={showPassword ? 'text' : 'password'} required value={password}
                                     onChange={e => setPassword(e.target.value)} placeholder="••••••••"
-                                    className="w-full px-4 py-3 pr-11 rounded-xl outline-none text-sm transition-all"
+                                    className="input-dark w-full px-4 py-3 pr-11 rounded-xl outline-none text-sm transition-all"
                                     style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(201,162,39,0.2)', color: 'white' }}
                                     onFocus={e => { e.target.style.borderColor = 'rgba(201,162,39,0.6)'; e.target.style.background = 'rgba(255,255,255,0.1)'; }}
                                     onBlur={e => { e.target.style.borderColor = 'rgba(201,162,39,0.2)'; e.target.style.background = 'rgba(255,255,255,0.07)'; }}/>
