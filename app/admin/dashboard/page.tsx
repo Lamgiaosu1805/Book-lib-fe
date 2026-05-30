@@ -9,8 +9,9 @@ import CategoryList from './components/CategoryList';
 import UserManagement from './components/UserManagement';
 import AuditLogList from './components/AuditLogList';
 import AdminManagement from './components/AdminManagement';
+import AdminPasswordSettings from './components/AdminPasswordSettings';
 
-type Tab = 'list' | 'add' | 'categories' | 'users' | 'logs' | 'admins';
+type Tab = 'list' | 'add' | 'categories' | 'users' | 'logs' | 'admins' | 'account';
 
 const tabConfig: Record<Tab, { title: string; sub: string }> = {
     list:       { title: 'Danh sách tài liệu',   sub: 'Quản lý toàn bộ sách và tài liệu trong hệ thống' },
@@ -19,6 +20,7 @@ const tabConfig: Record<Tab, { title: string; sub: string }> = {
     users:      { title: 'Quản lý người dùng',    sub: 'Xem và quản lý tài khoản thành viên hệ thống'   },
     logs:       { title: 'Nhật ký hoạt động',     sub: 'Theo dõi mọi thao tác của quản trị viên'        },
     admins:     { title: 'Quản trị viên',         sub: 'Cấp tài khoản và quản lý nhóm quản trị viên'    },
+    account:    { title: 'Tài khoản',             sub: 'Đổi mật khẩu quản trị viên của bạn'             },
 };
 
 export default function AdminDashboard() {
@@ -47,6 +49,7 @@ export default function AdminDashboard() {
                     {activeTab === 'users'      && <UserManagement />}
                     {activeTab === 'logs'       && <AuditLogList />}
                     {activeTab === 'admins'     && <AdminManagement />}
+                    {activeTab === 'account'    && <AdminPasswordSettings />}
                 </main>
             </div>
         </div>

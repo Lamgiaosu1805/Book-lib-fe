@@ -27,7 +27,7 @@ export function middleware(req: NextRequest) {
       try {
         const decoded: any = jwtDecode(adminToken);
         if (decoded.role === "admin" && (!decoded.exp || decoded.exp > now)) {
-          return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+          return NextResponse.redirect(new URL(decoded.mustChangePassword ? "/admin/change-password" : "/admin/dashboard", req.url));
         }
       } catch {}
     }
@@ -42,7 +42,7 @@ export function middleware(req: NextRequest) {
         try {
           const decoded: any = jwtDecode(adminToken);
           if (decoded.role === "admin" && (!decoded.exp || decoded.exp > now)) {
-            return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+            return NextResponse.redirect(new URL(decoded.mustChangePassword ? "/admin/change-password" : "/admin/dashboard", req.url));
           }
         } catch {}
       }
@@ -57,6 +57,12 @@ export function middleware(req: NextRequest) {
       const decoded: any = jwtDecode(adminToken);
       if (decoded.role !== "admin" || (decoded.exp && decoded.exp < now)) {
         return NextResponse.redirect(new URL("/admin/login", req.url));
+      }
+      if (decoded.mustChangePassword && pathname !== "/admin/change-password") {
+        return NextResponse.redirect(new URL("/admin/change-password", req.url));
+      }
+      if (!decoded.mustChangePassword && pathname === "/admin/change-password") {
+        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
       }
     } catch {
       return NextResponse.redirect(new URL("/admin/login", req.url));

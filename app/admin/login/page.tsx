@@ -4,6 +4,19 @@ import { useState } from 'react';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { jwtDecode } from 'jwt-decode';
+
+type AdminToken = {
+    mustChangePassword?: boolean;
+};
+
+type ApiError = {
+    response?: {
+        data?: {
+            message?: string;
+        };
+    };
+};
 
 const Cross = ({ size = 24 }: { size?: number }) => (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="currentColor">
@@ -26,9 +39,10 @@ export default function AdminLogin() {
         try {
             const res = await api.post('/admin/login', { identifier, password });
             document.cookie = `token=${res.data.data.accessToken}; path=/; max-age=604800; samesite=lax`;
-            router.push('/admin/dashboard');
-        } catch (err: any) {
-            setErrorMsg(err.response?.data?.message || 'Thông tin đăng nhập không đúng');
+            const decoded = jwtDecode<AdminToken>(res.data.data.accessToken);
+            router.push(decoded.mustChangePassword ? '/admin/change-password' : '/admin/dashboard');
+        } catch (err: unknown) {
+            setErrorMsg((err as ApiError).response?.data?.message || 'Thông tin đăng nhập không đúng');
         } finally { setLoading(false); }
     };
 

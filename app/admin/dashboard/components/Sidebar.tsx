@@ -1,6 +1,8 @@
 'use client';
 
-import { BookPlus, Library, LogOut, Tags, Users, ScrollText, ShieldCheck } from 'lucide-react';
+import { BookPlus, Library, LogOut, Tags, Users, ScrollText, ShieldCheck, KeyRound } from 'lucide-react';
+
+type Tab = 'list' | 'add' | 'categories' | 'users' | 'logs' | 'admins' | 'account';
 
 const Cross = ({ size = 14 }: { size?: number }) => (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="currentColor">
@@ -10,8 +12,8 @@ const Cross = ({ size = 14 }: { size?: number }) => (
 );
 
 interface SidebarProps {
-    activeTab: 'list' | 'add' | 'categories' | 'users' | 'logs' | 'admins';
-    setActiveTab: (tab: 'list' | 'add' | 'categories' | 'users' | 'logs' | 'admins') => void;
+    activeTab: Tab;
+    setActiveTab: (tab: Tab) => void;
     onOpenLogout: () => void;
 }
 
@@ -22,6 +24,7 @@ const navItems = [
     { key: 'users',      icon: Users,        label: 'Người dùng'      },
     { key: 'logs',       icon: ScrollText,   label: 'Nhật ký'         },
     { key: 'admins',     icon: ShieldCheck,  label: 'Quản trị viên'   },
+    { key: 'account',    icon: KeyRound,     label: 'Tài khoản'       },
 ] as const;
 
 export default function Sidebar({ activeTab, setActiveTab, onOpenLogout }: SidebarProps) {

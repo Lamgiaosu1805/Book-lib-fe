@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { CheckCircle2, AlertCircle, Loader2, UserPlus, ShieldOff, RefreshCcw } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, UserPlus, ShieldOff, RefreshCcw, Copy, KeyRound } from 'lucide-react';
 import { useDialog } from '@/app/components/Dialog';
 import { jwtDecode } from 'jwt-decode';
 
@@ -14,10 +14,9 @@ export default function AdminManagement() {
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const { confirm, dialog } = useDialog();
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [displayName, setDisplayName] = useState('');
     const [saintName, setSaintName] = useState('');
+    const [createdCredential, setCreatedCredential] = useState<{ username: string; temporaryPassword: string } | null>(null);
 
     const getToken = () => {
         const ca = document.cookie.split(';');
@@ -78,20 +77,46 @@ export default function AdminManagement() {
         }
     };
 
+    const handleResetPassword = async (id: string, name: string) => {
+        const ok = await confirm(`Reset mật khẩu admin "${name}"?`, { title: 'Reset mật khẩu', confirmText: 'Reset' });
+        if (!ok) return;
+        try {
+            const res = await api.patch(`/admin/${id}/reset-password`, {}, { headers: { Authorization: `Bearer ${getToken()}` } });
+            setCreatedCredential({
+                username: res.data.data.username,
+                temporaryPassword: res.data.data.temporaryPassword,
+            });
+            showToast('success', 'Đã reset mật khẩu admin');
+            fetchAdmins();
+        } catch (err: any) {
+            showToast('error', err.response?.data?.message || 'Có lỗi xảy ra');
+        }
+    };
+
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         setCreating(true);
         try {
-            await api.post('/admin/create',
-                { email, password, displayName, saintName },
+            const res = await api.post('/admin/create',
+                { displayName, saintName },
                 { headers: { Authorization: `Bearer ${getToken()}` } },
             );
+            setCreatedCredential({
+                username: res.data.data.username,
+                temporaryPassword: res.data.data.temporaryPassword,
+            });
             showToast('success', 'Tạo tài khoản admin thành công!');
-            setEmail(''); setPassword(''); setDisplayName(''); setSaintName('');
+            setDisplayName(''); setSaintName('');
             fetchAdmins();
         } catch (err: any) {
             showToast('error', err.response?.data?.message || 'Có lỗi xảy ra');
         } finally { setCreating(false); }
+    };
+
+    const copyCredential = async () => {
+        if (!createdCredential) return;
+        await navigator.clipboard.writeText(`Username: ${createdCredential.username}\nMật khẩu tạm: ${createdCredential.temporaryPassword}`);
+        showToast('success', 'Đã sao chép thông tin đăng nhập');
     };
 
     const inputStyle: React.CSSProperties = {
@@ -138,20 +163,26 @@ export default function AdminManagement() {
                                 style={inputStyle}/>
                         </div>
                     </div>
-                    <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                               style={{ color: '#7a3a46' }}>Email đăng nhập</label>
-                        <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                            placeholder="admin@example.com"
-                            style={inputStyle}/>
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                               style={{ color: '#7a3a46' }}>Mật khẩu</label>
-                        <input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)}
-                            placeholder="Tối thiểu 6 ký tự"
-                            style={inputStyle}/>
-                    </div>
+                    {createdCredential && (
+                        <div className="rounded-xl p-4" style={{ background: '#F9F5EE', border: '1px solid #E5D5B5' }}>
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <KeyRound size={14} style={{ color: '#C9A227' }}/>
+                                        <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#7a3a46' }}>Thông tin đăng nhập tạm</p>
+                                    </div>
+                                    <p className="text-xs" style={{ color: '#3B0E1E' }}>Username: <span className="font-black">@{createdCredential.username}</span></p>
+                                    <p className="text-xs" style={{ color: '#3B0E1E' }}>Mật khẩu tạm: <span className="font-black">{createdCredential.temporaryPassword}</span></p>
+                                </div>
+                                <button type="button" onClick={copyCredential}
+                                    className="p-2 rounded-lg shrink-0"
+                                    title="Sao chép"
+                                    style={{ color: '#3B0E1E', border: '1px solid #E5D5B5', background: '#FFFDF8' }}>
+                                    <Copy size={14}/>
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     <button type="submit" disabled={creating}
                         className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
@@ -179,7 +210,7 @@ export default function AdminManagement() {
                 ) : (
                     <div className="space-y-3">
                         {admins.map(admin => {
-                            const fullName = [admin.saintName, admin.displayName].filter(Boolean).join(' ') || admin.email;
+                            const fullName = [admin.saintName, admin.displayName].filter(Boolean).join(' ') || admin.username || admin.email;
                             const isMe = getCurrentAdminId() === admin._id;
                             return (
                                 <div key={admin._id} className="flex items-center gap-3 p-3 rounded-xl transition-all"
@@ -205,26 +236,38 @@ export default function AdminManagement() {
                                                 @{admin.username}
                                             </p>
                                         )}
-                                        <p className="text-xs truncate" style={{ color: '#9a7070' }}>{admin.email}</p>
+                                        {admin.email && (
+                                            <p className="text-xs truncate" style={{ color: '#9a7070' }}>{admin.email}</p>
+                                        )}
                                     </div>
 
                                     {/* Nút hành động — chỉ super admin thấy, không tự xóa mình */}
                                     {isSuperAdmin && !isMe && !admin.isSuperAdmin && (
-                                        admin.isDeleted ? (
-                                            <button onClick={() => handleRestore(admin._id)}
-                                                className="p-2 rounded-lg transition-all"
-                                                title="Khôi phục"
-                                                style={{ color: '#22c55e', border: '1px solid #bbf7d0', background: '#f0fdf4' }}>
-                                                <RefreshCcw size={14}/>
-                                            </button>
-                                        ) : (
-                                            <button onClick={() => handleSoftDelete(admin._id, fullName)}
-                                                className="p-2 rounded-lg transition-all"
-                                                title="Đình chỉ"
-                                                style={{ color: '#ef4444', border: '1px solid #fecdd3', background: '#fff5f5' }}>
-                                                <ShieldOff size={14}/>
-                                            </button>
-                                        )
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {!admin.isDeleted && (
+                                                <button onClick={() => handleResetPassword(admin._id, fullName)}
+                                                    className="p-2 rounded-lg transition-all"
+                                                    title="Reset mật khẩu"
+                                                    style={{ color: '#3B0E1E', border: '1px solid #E5D5B5', background: '#FFFDF8' }}>
+                                                    <KeyRound size={14}/>
+                                                </button>
+                                            )}
+                                            {admin.isDeleted ? (
+                                                <button onClick={() => handleRestore(admin._id)}
+                                                    className="p-2 rounded-lg transition-all"
+                                                    title="Khôi phục"
+                                                    style={{ color: '#22c55e', border: '1px solid #bbf7d0', background: '#f0fdf4' }}>
+                                                    <RefreshCcw size={14}/>
+                                                </button>
+                                            ) : (
+                                                <button onClick={() => handleSoftDelete(admin._id, fullName)}
+                                                    className="p-2 rounded-lg transition-all"
+                                                    title="Đình chỉ"
+                                                    style={{ color: '#ef4444', border: '1px solid #fecdd3', background: '#fff5f5' }}>
+                                                    <ShieldOff size={14}/>
+                                                </button>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             );
