@@ -12,6 +12,7 @@ export default function AdminManagement() {
     const [creating, setCreating] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+    const [currentAdminId, setCurrentAdminId] = useState('');
     const { confirm, dialog } = useDialog();
 
     const [displayName, setDisplayName] = useState('');
@@ -48,10 +49,22 @@ export default function AdminManagement() {
     };
 
     useEffect(() => {
-        try {
-            const decoded: any = jwtDecode(getToken());
-            setIsSuperAdmin(decoded.isSuperAdmin === true);
-        } catch {}
+        setCurrentAdminId(getCurrentAdminId());
+
+        const fetchCurrentAdmin = async () => {
+            try {
+                const res = await api.get('/admin/me', { headers: { Authorization: `Bearer ${getToken()}` } });
+                setIsSuperAdmin(res.data?.isSuperAdmin === true);
+                setCurrentAdminId(res.data?._id || getCurrentAdminId());
+            } catch {
+                try {
+                    const decoded: any = jwtDecode(getToken());
+                    setIsSuperAdmin(decoded.isSuperAdmin === true);
+                } catch {}
+            }
+        };
+
+        fetchCurrentAdmin();
         fetchAdmins();
     }, []);
 
@@ -171,7 +184,7 @@ export default function AdminManagement() {
                                         <KeyRound size={14} style={{ color: '#C9A227' }}/>
                                         <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#7a3a46' }}>Thông tin đăng nhập tạm</p>
                                     </div>
-                                    <p className="text-xs" style={{ color: '#3B0E1E' }}>Username: <span className="font-black">@{createdCredential.username}</span></p>
+                                    <p className="text-xs" style={{ color: '#3B0E1E' }}>Username: <span className="font-black">{createdCredential.username}</span></p>
                                     <p className="text-xs" style={{ color: '#3B0E1E' }}>Mật khẩu tạm: <span className="font-black">{createdCredential.temporaryPassword}</span></p>
                                 </div>
                                 <button type="button" onClick={copyCredential}
@@ -211,7 +224,7 @@ export default function AdminManagement() {
                     <div className="space-y-3">
                         {admins.map(admin => {
                             const fullName = [admin.saintName, admin.displayName].filter(Boolean).join(' ') || admin.username || admin.email;
-                            const isMe = getCurrentAdminId() === admin._id;
+                            const isMe = currentAdminId === admin._id;
                             return (
                                 <div key={admin._id} className="flex items-center gap-3 p-3 rounded-xl transition-all"
                                      style={{
@@ -233,7 +246,7 @@ export default function AdminManagement() {
                                         </div>
                                         {admin.username && (
                                             <p className="text-[11px] font-bold" style={{ color: '#C9A227' }}>
-                                                @{admin.username}
+                                                {admin.username}
                                             </p>
                                         )}
                                         {admin.email && (
@@ -246,10 +259,11 @@ export default function AdminManagement() {
                                         <div className="flex items-center gap-2 shrink-0">
                                             {!admin.isDeleted && (
                                                 <button onClick={() => handleResetPassword(admin._id, fullName)}
-                                                    className="p-2 rounded-lg transition-all"
+                                                    className="px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-bold"
                                                     title="Reset mật khẩu"
                                                     style={{ color: '#3B0E1E', border: '1px solid #E5D5B5', background: '#FFFDF8' }}>
                                                     <KeyRound size={14}/>
+                                                    Reset
                                                 </button>
                                             )}
                                             {admin.isDeleted ? (

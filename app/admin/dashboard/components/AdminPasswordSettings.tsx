@@ -20,6 +20,11 @@ type AdminProfile = {
     isSuperAdmin?: boolean;
 };
 
+const formatUsername = (username?: string) => {
+    const clean = username?.replace(/^@+/, '').trim();
+    return clean || '';
+};
+
 export default function AdminPasswordSettings() {
     const [profile, setProfile] = useState<AdminProfile | null>(null);
     const [oldPassword, setOldPassword] = useState('');
@@ -96,6 +101,7 @@ export default function AdminPasswordSettings() {
 
     const fullName = [profile?.saintName, profile?.displayName].filter(Boolean).join(' ');
     const displayName = fullName || profile?.username || profile?.email || 'Quản trị viên';
+    const usernameLabel = formatUsername(profile?.username);
     const initial = displayName.charAt(0).toUpperCase();
 
     return (
@@ -119,10 +125,10 @@ export default function AdminPasswordSettings() {
                             <UserCircle size={17}/> {displayName}
                         </h3>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            {profile?.username && (
+                            {usernameLabel && (
                                 <span className="text-[11px] font-bold px-2 py-1 rounded-lg"
                                       style={{ background: '#F9F5EE', color: '#C9A227', border: '1px solid #E5D5B5' }}>
-                                    @{profile.username}
+                                    {usernameLabel}
                                 </span>
                             )}
                             {profile?.email && (
