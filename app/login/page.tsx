@@ -1,27 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import api, { BASE_URL } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function UserLogin() {
+function SearchParamsReader({ onRegistered }: { onRegistered: () => void }) {
+    const searchParams = useSearchParams();
+    useEffect(() => {
+        if (searchParams.get('registered') === '1') onRegistered();
+    }, [searchParams]);
+    return null;
+}
+
+function UserLoginContent() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-
-    // ✅ State quản lý nội dung lỗi hiển thị trong Modal
     const [errorMsg, setErrorMsg] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
 
     const router = useRouter();
-    const searchParams = useSearchParams();
-
-    useEffect(() => {
-        if (searchParams.get('registered') === '1') {
-            setSuccessMsg('Đăng ký thành công! Vui lòng đăng nhập.');
-        }
-    }, [searchParams]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -49,6 +48,9 @@ export default function UserLogin() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-linear-to-tr from-blue-500 via-indigo-500 to-purple-600 p-4">
+            <Suspense>
+                <SearchParamsReader onRegistered={() => setSuccessMsg('Đăng ký thành công! Vui lòng đăng nhập.')} />
+            </Suspense>
 
             {successMsg && (
                 <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-2xl shadow-lg font-bold text-sm animate-in slide-in-from-top-4">
@@ -161,5 +163,13 @@ export default function UserLogin() {
                 </form>
             </div>
         </div>
+    );
+}
+
+export default function UserLogin() {
+    return (
+        <Suspense>
+            <UserLoginContent />
+        </Suspense>
     );
 }

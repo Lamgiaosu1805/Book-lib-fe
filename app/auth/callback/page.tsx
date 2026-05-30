@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
-export default function AuthCallbackPage() {
+function CallbackHandler() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -18,10 +18,17 @@ export default function AuthCallbackPage() {
         }
     }, []);
 
+    return null;
+}
+
+export default function AuthCallbackPage() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FB] gap-4">
             <Loader2 size={40} className="animate-spin text-indigo-500" />
             <p className="text-slate-500 font-bold text-sm uppercase tracking-widest">Đang xác thực...</p>
+            <Suspense>
+                <CallbackHandler />
+            </Suspense>
         </div>
     );
 }
