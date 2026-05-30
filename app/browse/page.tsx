@@ -2,23 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { BookOpen, Search, LogIn, UserPlus, Loader2 } from 'lucide-react';
+import { BookOpen, Search, LogIn, UserPlus, Loader2, X, ChevronRight } from 'lucide-react';
 import PdfThumbnail from '../admin/dashboard/components/PdfThumbnail';
 
 export default function BrowsePage() {
     const [books, setBooks] = useState<any[]>([]);
+    const [categories, setCategories] = useState<string[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState('');
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [previewBook, setPreviewBook] = useState<any>(null);
     const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+    const [pdfUrl, setPdfUrl] = useState<string | null>(null);
     const [loadingPdf, setLoadingPdf] = useState(false);
 
     useEffect(() => {
-        api.get('/books?limit=100')
-            .then(res => setBooks(res.data.items || []))
-            .catch(err => console.error(err))
+        api.get('/books?limit=200')
+            .then(res => {
+                const items = res.data.items || [];
+                setBooks(items);
+                const cats = [...new Set<string>(items.map((b: any) => b.category).filter(Boolean))];
+                setCategories(cats);
+            })
             .finally(() => setLoading(false));
     }, []);
 
@@ -26,145 +32,189 @@ export default function BrowsePage() {
         setPreviewBook(book);
         setLoadingPdf(true);
         setPdfBlob(null);
+        if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
         try {
             const res = await api.get(`/books/${book._id}/preview`, { responseType: 'blob' });
+            const url = URL.createObjectURL(res.data);
             setPdfBlob(res.data);
+            setPdfUrl(url);
         } catch {
-            setPdfBlob(null);
+            setPdfUrl(null);
         } finally {
             setLoadingPdf(false);
         }
     };
 
-    const filteredBooks = books.filter(b =>
-        b.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (b.author || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const closePreview = () => {
+        setPreviewBook(null);
+        if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+        setPdfBlob(null);
+    };
+
+    const filteredBooks = books.filter(b => {
+        const matchSearch = b.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (b.author || '').toLowerCase().includes(searchTerm.toLowerCase());
+        const matchCat = !selectedCategory || b.category === selectedCategory;
+        return matchSearch && matchCat;
+    });
 
     const formatCurrency = (n: number) =>
         new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
 
     return (
-        <div className="min-h-screen bg-[#F8F9FB] font-sans">
+        <div className="min-h-screen bg-stone-50 font-sans">
             {/* HEADER */}
-            <header className="bg-white border-b border-slate-200/60 sticky top-0 z-40 shadow-sm">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <header className="bg-[#1a2e4a] text-white sticky top-0 z-40 shadow-lg">
+                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                            <BookOpen size={20} />
+                        <div className="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center shadow">
+                            <BookOpen size={18} className="text-white" />
                         </div>
-                        <h1 className="text-xl font-black text-slate-800 tracking-tight">E-LIBRARY</h1>
+                        <div>
+                            <span className="font-black text-base tracking-tight">E-Library</span>
+                            <span className="text-slate-400 text-xs ml-2 hidden sm:inline">Thư viện điện tử</span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Link href="/login" className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
-                            <LogIn size={16} /> Đăng nhập
+                    <div className="flex items-center gap-2">
+                        <Link href="/login" className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors rounded-lg hover:bg-white/10">
+                            <LogIn size={15} /> Đăng nhập
                         </Link>
-                        <Link href="/register" className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-colors shadow-sm">
-                            <UserPlus size={16} /> Đăng ký
+                        <Link href="/register" className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white text-sm font-bold rounded-lg transition-colors shadow">
+                            <UserPlus size={15} /> Đăng ký
                         </Link>
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 py-10">
-                {/* HERO */}
-                <div className="text-center mb-10">
-                    <h2 className="text-3xl font-black text-slate-800 mb-3">Thư viện tài liệu</h2>
-                    <p className="text-slate-500 font-medium mb-6">Xem thử tài liệu miễn phí. Đăng nhập để truy cập đầy đủ.</p>
-                    <div className="relative max-w-md mx-auto">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Tìm theo tên sách, tác giả..."
-                            className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 shadow-sm rounded-2xl outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-medium"
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                        />
+            {/* HERO */}
+            <div className="bg-[#1a2e4a] pb-12 pt-10">
+                <div className="max-w-7xl mx-auto px-6 text-center">
+                    <h1 className="text-3xl md:text-4xl font-black text-white mb-3">
+                        Khám phá <span className="text-amber-400">kho tàng tri thức</span>
+                    </h1>
+                    <p className="text-slate-400 mb-8 text-base">Đăng nhập để đọc toàn bộ nội dung và lưu sách vào tủ cá nhân</p>
+                    <div className="relative max-w-xl mx-auto">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+                        <input type="text" placeholder="Tìm kiếm theo tên sách, tác giả..."
+                            className="w-full pl-12 pr-4 py-4 bg-white rounded-xl shadow-lg outline-none focus:ring-4 focus:ring-amber-400/30 text-stone-800 font-medium"
+                            value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                     </div>
                 </div>
+            </div>
 
+            <div className="max-w-7xl mx-auto px-6 py-8">
+                {/* CATEGORY FILTER */}
+                {categories.length > 0 && (
+                    <div className="flex gap-2 flex-wrap mb-8">
+                        <button onClick={() => setSelectedCategory('')}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${!selectedCategory ? 'bg-amber-500 text-white shadow-sm' : 'bg-white text-stone-600 border border-stone-200 hover:border-amber-300'}`}>
+                            Tất cả
+                        </button>
+                        {categories.map(cat => (
+                            <button key={cat} onClick={() => setSelectedCategory(cat === selectedCategory ? '' : cat)}
+                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${selectedCategory === cat ? 'bg-amber-500 text-white shadow-sm' : 'bg-white text-stone-600 border border-stone-200 hover:border-amber-300'}`}>
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* BOOK GRID */}
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-32 text-indigo-500">
-                        <Loader2 size={48} className="animate-spin mb-4" />
-                        <p className="font-bold tracking-widest uppercase text-xs">Đang tải...</p>
+                    <div className="flex flex-col items-center justify-center py-32 text-amber-500">
+                        <Loader2 size={40} className="animate-spin mb-4" />
+                        <p className="font-semibold text-stone-400 text-sm">Đang tải thư viện...</p>
+                    </div>
+                ) : filteredBooks.length === 0 ? (
+                    <div className="text-center py-24 text-stone-400">
+                        <BookOpen size={48} className="mx-auto mb-4 opacity-30" />
+                        <p className="font-semibold">Không tìm thấy sách phù hợp</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
                         {filteredBooks.map(book => (
-                            <div
-                                key={book._id}
-                                onClick={() => openPreview(book)}
-                                className="bg-white rounded-[24px] border border-slate-200/60 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group cursor-pointer active:scale-[0.98]"
-                            >
-                                <div className="h-64 bg-slate-100 relative overflow-hidden flex items-center justify-center">
-                                    <div className="absolute inset-0 w-full h-full flex items-center justify-center overflow-hidden [&_canvas]:!w-full [&_canvas]:!h-full [&_img]:!w-full [&_img]:!h-full">
+                            <div key={book._id} onClick={() => openPreview(book)}
+                                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer group border border-stone-100">
+                                <div className="h-52 bg-stone-100 relative overflow-hidden">
+                                    <div className="absolute inset-0 [&_canvas]:!w-full [&_canvas]:!h-full [&_canvas]:!object-cover [&_iframe]:!w-full [&_iframe]:!h-full">
                                         <PdfThumbnail bookId={book._id} token="" />
                                     </div>
-                                    <div className="absolute top-3 right-3 z-20">
-                                        {book.isFree ? (
-                                            <span className="bg-green-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase shadow">Miễn Phí</span>
-                                        ) : (
-                                            <span className="bg-amber-500 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase shadow">{formatCurrency(book.price)}</span>
-                                        )}
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center">
+                                        <span className="opacity-0 group-hover:opacity-100 transition-all bg-white/90 text-stone-700 text-xs font-bold px-3 py-1.5 rounded-full">
+                                            Xem thử
+                                        </span>
+                                    </div>
+                                    <div className="absolute top-2 right-2">
+                                        {book.isFree
+                                            ? <span className="bg-emerald-500 text-white px-2 py-0.5 rounded-md text-[10px] font-black">MIỄN PHÍ</span>
+                                            : <span className="bg-amber-500 text-white px-2 py-0.5 rounded-md text-[10px] font-black">{formatCurrency(book.price)}</span>}
                                     </div>
                                 </div>
-
-                                <div className="p-5 flex flex-col flex-1">
-                                    <h3 className="font-black text-slate-800 text-base leading-tight line-clamp-2 mb-1 uppercase group-hover:text-indigo-600 transition-colors">
-                                        {book.title}
-                                    </h3>
-                                    <p className="text-slate-400 text-xs font-bold mb-4">{book.author || 'Tác giả ẩn danh'}</p>
-                                    <div className="mt-auto">
-                                        <div className="w-full py-2.5 bg-slate-100 group-hover:bg-indigo-50 text-slate-600 group-hover:text-indigo-600 rounded-xl font-bold text-sm transition-all text-center">
-                                            Xem thử
-                                        </div>
-                                    </div>
+                                <div className="p-3">
+                                    <h3 className="font-bold text-stone-800 text-sm line-clamp-2 leading-tight mb-1 group-hover:text-amber-600 transition-colors">{book.title}</h3>
+                                    <p className="text-stone-400 text-xs truncate">{book.author || 'Chưa rõ tác giả'}</p>
+                                    {book.category && (
+                                        <span className="inline-block mt-2 bg-stone-100 text-stone-500 text-[10px] font-semibold px-2 py-0.5 rounded-md">{book.category}</span>
+                                    )}
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
-            </main>
+
+                <p className="text-center text-stone-400 text-sm mt-8">
+                    Hiển thị {filteredBooks.length} / {books.length} tài liệu
+                </p>
+            </div>
 
             {/* MODAL XEM THỬ */}
             {previewBook && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col">
-                    <div className="h-16 bg-white flex items-center justify-between px-6 shrink-0">
-                        <div>
-                            <h3 className="font-black text-slate-800">{previewBook.title}</h3>
-                            <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Bản xem thử — 1 trang</p>
+                <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex flex-col">
+                    <div className="bg-[#1a2e4a] h-14 flex items-center justify-between px-6 shrink-0">
+                        <div className="flex items-center gap-3">
+                            <BookOpen size={16} className="text-amber-400" />
+                            <div>
+                                <p className="text-white font-bold text-sm line-clamp-1">{previewBook.title}</p>
+                                <p className="text-amber-400 text-[10px] font-semibold uppercase tracking-widest">Bản xem thử · 1 trang</p>
+                            </div>
                         </div>
-                        <button onClick={() => { setPreviewBook(null); setPdfBlob(null); }} className="p-2 hover:bg-red-50 text-slate-500 hover:text-red-500 rounded-xl transition-all text-xl font-bold">✕</button>
+                        <div className="flex items-center gap-3">
+                            <Link href="/login" className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold rounded-lg transition-colors">
+                                <LogIn size={13} /> Đăng nhập để đọc full
+                            </Link>
+                            <button onClick={closePreview} className="p-1.5 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-all">
+                                <X size={20} />
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="flex-1 bg-slate-800 relative p-4 md:p-8 overflow-hidden">
+                    <div className="flex-1 bg-stone-800 relative overflow-hidden">
                         {loadingPdf ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                                <Loader2 size={40} className="animate-spin mb-4 text-indigo-400" />
-                                <p className="text-xs font-bold uppercase tracking-widest">Đang tải PDF...</p>
+                                <Loader2 size={36} className="animate-spin mb-3 text-amber-400" />
+                                <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Đang tải tài liệu...</p>
                             </div>
-                        ) : pdfBlob ? (
-                            <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-                                <iframe
-                                    src={`${URL.createObjectURL(pdfBlob)}#toolbar=0&navpanes=0`}
-                                    className="w-full h-full"
-                                />
-                                {/* CTA đăng nhập */}
-                                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur px-8 py-5 rounded-2xl shadow-2xl text-center border border-slate-200">
-                                    <p className="font-bold text-slate-800 mb-3">Đăng nhập để đọc toàn bộ tài liệu</p>
-                                    <div className="flex gap-3 justify-center">
-                                        <Link href="/login" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow transition-all">
-                                            Đăng nhập
-                                        </Link>
-                                        <Link href="/register" className="px-5 py-2.5 border-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-xl font-bold transition-all">
-                                            Đăng ký miễn phí
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
+                        ) : pdfUrl ? (
+                            <iframe src={`${pdfUrl}#toolbar=0&navpanes=0`} className="w-full h-full" />
                         ) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-slate-400 font-bold">Không thể tải bản xem thử</div>
+                            <div className="absolute inset-0 flex items-center justify-center text-stone-500 font-semibold">Không thể tải bản xem thử</div>
                         )}
+                    </div>
+
+                    <div className="bg-white border-t border-stone-100 p-4 flex items-center justify-between">
+                        <p className="text-stone-600 text-sm font-medium">
+                            {previewBook.isFree ? '📗 Sách miễn phí — Đăng nhập để đọc đầy đủ' : `📕 Sách trả phí — ${formatCurrency(previewBook.price)}`}
+                        </p>
+                        <div className="flex gap-3">
+                            <Link href="/register" className="flex items-center gap-2 px-4 py-2 border-2 border-amber-500 text-amber-600 text-sm font-bold rounded-lg hover:bg-amber-50 transition-colors">
+                                <UserPlus size={14}/> Đăng ký miễn phí
+                            </Link>
+                            <Link href="/login" className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-lg transition-colors shadow">
+                                <ChevronRight size={14}/> Đăng nhập
+                            </Link>
+                        </div>
                     </div>
                 </div>
             )}

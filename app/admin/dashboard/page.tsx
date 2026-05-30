@@ -6,47 +6,40 @@ import LogoutModal from './components/LogoutModal';
 import BookList from './components/BookList';
 import AddBook from './components/AddBook';
 import CategoryList from './components/CategoryList';
-import UserManagement from './components/UserManagement'; // ✅ Import component mới
+import UserManagement from './components/UserManagement';
+
+const tabTitles = {
+    list:       { title: 'Danh sách tài liệu',    sub: 'Quản lý toàn bộ sách và tài liệu trong hệ thống' },
+    add:        { title: 'Thêm tài liệu mới',      sub: 'Tải lên và cấu hình sách PDF mới'               },
+    categories: { title: 'Quản lý danh mục',       sub: 'Phân loại và tổ chức tài liệu theo chủ đề'      },
+    users:      { title: 'Quản lý người dùng',     sub: 'Xem và quản lý tài khoản thành viên hệ thống'   },
+};
 
 export default function AdminDashboard() {
-    // ✅ Thêm 'users' vào state mặc định
     const [activeTab, setActiveTab] = useState<'list' | 'add' | 'categories' | 'users'>('list');
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+    const { title, sub } = tabTitles[activeTab];
+
     return (
-        <div className="flex min-h-screen bg-[#F8F9FB] antialiased text-slate-900 font-sans">
-
+        <div className="flex min-h-screen bg-stone-50 antialiased font-sans">
             {showLogoutModal && <LogoutModal onClose={() => setShowLogoutModal(false)} />}
+            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onOpenLogout={() => setShowLogoutModal(true)} />
 
-            <Sidebar
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                onOpenLogout={() => setShowLogoutModal(true)}
-            />
+            <div className="flex-1 flex flex-col min-w-0">
+                {/* Page header */}
+                <div className="bg-white border-b border-stone-100 px-8 py-5 sticky top-0 z-30">
+                    <h1 className="text-xl font-black text-stone-800">{title}</h1>
+                    <p className="text-stone-400 text-sm mt-0.5">{sub}</p>
+                </div>
 
-            <main className="flex-1 p-10 overflow-y-auto">
-                <header className="mb-10 flex justify-between items-start">
-                    <div>
-                        <p className="text-blue-600 font-bold text-[11px] uppercase tracking-[0.2em] mb-1">
-                            Quản lý hệ thống
-                        </p>
-                        <h2 className="text-3xl font-black text-slate-800 tracking-tight">
-                            {/* ✅ Cập nhật tiêu đề linh hoạt */}
-                            {activeTab === 'list' && 'Danh sách sách hiện có'}
-                            {activeTab === 'add' && 'Tải lên tài liệu PDF mới'}
-                            {activeTab === 'categories' && 'Quản lý danh mục sách'}
-                            {activeTab === 'users' && 'Quản lý thành viên hệ thống'}
-                        </h2>
-                    </div>
-                </header>
-
-                {/* ✅ Điều hướng các Tab */}
-                {activeTab === 'list' && <BookList />}
-                {activeTab === 'add' && <AddBook onSuccess={() => setActiveTab('list')} />}
-                {activeTab === 'categories' && <CategoryList />}
-                {activeTab === 'users' && <UserManagement />} {/* ✅ Gọi Component ra */}
-
-            </main>
+                <main className="flex-1 p-8">
+                    {activeTab === 'list'       && <BookList />}
+                    {activeTab === 'add'        && <AddBook onSuccess={() => setActiveTab('list')} />}
+                    {activeTab === 'categories' && <CategoryList />}
+                    {activeTab === 'users'      && <UserManagement />}
+                </main>
+            </div>
         </div>
     );
 }
