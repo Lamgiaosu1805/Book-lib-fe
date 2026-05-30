@@ -13,6 +13,7 @@ export default function AdminManagement() {
     const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const [currentAdminId, setCurrentAdminId] = useState('');
+    const [viewMode, setViewMode] = useState<'active' | 'deleted'>('active');
     const { confirm, dialog } = useDialog();
 
     const [displayName, setDisplayName] = useState('');
@@ -137,6 +138,10 @@ export default function AdminManagement() {
         border: '1.5px solid #E5D5B5', background: '#F9F5EE', color: '#3B0E1E', fontSize: 13,
     };
 
+    const activeAdmins = admins.filter(admin => !admin.isDeleted);
+    const deletedAdmins = admins.filter(admin => admin.isDeleted);
+    const displayedAdmins = viewMode === 'active' ? activeAdmins : deletedAdmins;
+
     return (
         <>
         {dialog}
@@ -214,16 +219,43 @@ export default function AdminManagement() {
                 </h3>
                 <div className="flex items-center gap-2 mb-5">
                     <div className="w-6 h-0.5" style={{ background: '#C9A227' }}/>
-                    <p className="text-xs" style={{ color: '#9a7070' }}>{admins.length} tài khoản</p>
+                    <p className="text-xs" style={{ color: '#9a7070' }}>
+                        {viewMode === 'active' ? activeAdmins.length : deletedAdmins.length} tài khoản
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2 mb-4">
+                    <button onClick={() => setViewMode('active')}
+                        className="px-4 py-2 rounded-xl font-bold text-sm transition-all border"
+                        style={{
+                            background: viewMode === 'active' ? '#3B0E1E' : '#FFFDF8',
+                            color: viewMode === 'active' ? '#C9A227' : '#7a3a46',
+                            borderColor: viewMode === 'active' ? '#3B0E1E' : '#E5D5B5',
+                        }}>
+                        Đang hoạt động
+                    </button>
+                    <button onClick={() => setViewMode('deleted')}
+                        className="px-4 py-2 rounded-xl font-bold text-sm transition-all border flex items-center gap-1.5"
+                        style={{
+                            background: viewMode === 'deleted' ? '#7B1A1A' : '#FFFDF8',
+                            color: viewMode === 'deleted' ? '#fca5a5' : '#ef4444',
+                            borderColor: viewMode === 'deleted' ? '#7B1A1A' : '#fecdd3',
+                        }}>
+                        <ShieldOff size={13}/> Đã đình chỉ
+                    </button>
                 </div>
 
                 {loading ? (
                     <div className="flex items-center justify-center py-12">
                         <Loader2 size={24} className="animate-spin" style={{ color: '#C9A227' }}/>
                     </div>
+                ) : displayedAdmins.length === 0 ? (
+                    <div className="py-12 text-center text-sm font-semibold" style={{ color: '#9a7070' }}>
+                        {viewMode === 'active' ? 'Không có quản trị viên đang hoạt động' : 'Không có quản trị viên bị đình chỉ'}
+                    </div>
                 ) : (
                     <div className="space-y-3">
-                        {admins.map(admin => {
+                        {displayedAdmins.map(admin => {
                             const fullName = [admin.saintName, admin.displayName].filter(Boolean).join(' ') || admin.username || admin.email;
                             const isMe = currentAdminId === admin._id;
                             return (
