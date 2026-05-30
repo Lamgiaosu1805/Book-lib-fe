@@ -3,50 +3,59 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import { Calendar, Trash2, ChevronLeft, ChevronRight, User, Tag, Pencil } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, User, Tag, Pencil, RefreshCcw, Flame, Loader2 } from 'lucide-react';
 import PdfThumbnail from './PdfThumbnail';
+
+type ViewMode = 'active' | 'deleted';
 
 export default function BookList() {
     const [books, setBooks] = useState<any[]>([]);
     const [fetching, setFetching] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [viewMode, setViewMode] = useState<ViewMode>('active');
+    const [totalItems, setTotalItems] = useState(0);
     const limit = 10;
     const router = useRouter();
 
     const getToken = () => {
-        const name = "token=";
         const ca = document.cookie.split(';');
-        for (let i = 0; i < ca.length; i++) {
-            let c = ca[i].trim();
-            if (c.indexOf(name) === 0) return c.substring(name.length, c.length);
+        for (const c of ca) {
+            const t = c.trim();
+            if (t.startsWith('token=')) return t.substring(6);
         }
-        return "";
+        return '';
     };
 
-    const fetchBooks = async (page = 1) => {
+    const fetchBooks = async (page = 1, mode: ViewMode = viewMode) => {
         const token = getToken();
         if (!token) return;
         setFetching(true);
         try {
-            const res = await api.get(`/books?page=${page}&limit=${limit}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await api.get(`/books?page=${page}&limit=${limit}&status=${mode}`, {
+                headers: { Authorization: `Bearer ${token}` },
             });
             setBooks(res.data.items || []);
             setTotalPages(res.data.meta?.totalPages || 1);
             setCurrentPage(res.data.meta?.currentPage || 1);
+            setTotalItems(res.data.meta?.totalItems || 0);
         } catch (err) {
-            console.error("Lỗi:", err);
+            console.error('Lỗi:', err);
         } finally {
             setFetching(false);
         }
     };
 
-    useEffect(() => { fetchBooks(currentPage); }, [currentPage]);
+    useEffect(() => { fetchBooks(1, viewMode); }, [viewMode]);
 
-    const handleDelete = async (e: React.MouseEvent, bookId: string, title: string) => {
+    const switchMode = (mode: ViewMode) => {
+        setCurrentPage(1);
+        setViewMode(mode);
+    };
+
+    const handleSoftDelete = async (e: React.MouseEvent, bookId: string, title: string) => {
         e.stopPropagation();
-        if (!confirm(`Xóa vĩnh viễn sách "${title}"?\nHành động này không thể hoàn tác.`)) return;
+        if (!confirm(`Xóa mềm sách "${title}"?\nSách sẽ bị ẩn nhưng vẫn có thể khôi phục lại.`)) return;
         try {
             await api.delete(`/books/${bookId}`, { headers: { Authorization: `Bearer ${getToken()}` } });
             fetchBooks(currentPage);
@@ -55,77 +64,192 @@ export default function BookList() {
         }
     };
 
-    const formatCurrency = (num: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+    const handleRestore = async (e: React.MouseEvent, bookId: string) => {
+        e.stopPropagation();
+        try {
+            await api.patch(`/books/${bookId}/restore`, {}, { headers: { Authorization: `Bearer ${getToken()}` } });
+            fetchBooks(currentPage, 'deleted');
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Lỗi khi khôi phục sách');
+        }
+    };
+
+    const handleHardDelete = async (e: React.MouseEvent, bookId: string, title: string) => {
+        e.stopPropagation();
+        if (!confirm(`⚠️ XÓA VĨNH VIỄN sách "${title}"?\n\nToàn bộ file PDF sẽ bị xóa khỏi máy chủ và KHÔNG THỂ khôi phục!`)) return;
+        try {
+            await api.delete(`/books/${bookId}/permanent`, { headers: { Authorization: `Bearer ${getToken()}` } });
+            fetchBooks(currentPage, 'deleted');
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Lỗi khi xóa vĩnh viễn');
+        }
+    };
+
+    const formatCurrency = (num: number) =>
+        new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+
+    const thStyle = 'px-4 py-3 text-[10px] font-black uppercase tracking-widest text-left';
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="bg-white rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50/50 border-b border-slate-100">
-                        <tr>
-                            <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest w-24">Bìa</th>
-                            <th className="px-4 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Thông tin sách</th>
-                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Danh mục</th>
-                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Giá/Loại</th>
-                            <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Sửa/Xóa</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                        {books.map((book) => (
-                            <tr
-                                key={book._id}
-                                onClick={() => router.push(`/admin/dashboard/books/${book._id}`)}
-                                className="hover:bg-slate-50/50 transition-colors cursor-pointer group"
-                            >
-                                <td className="px-8 py-4">
-                                    {/* ✅ ĐIỂM SỬA QUAN TRỌNG: Bọc div w-14 h-20 ở đây */}
-                                    <div className="w-14 h-20 rounded-md overflow-hidden border border-slate-200 shadow-sm relative bg-white">
-                                        <PdfThumbnail bookId={String(book._id)} token={getToken()} />
-                                    </div>
-                                </td>
-                                <td className="px-4 py-4">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="font-bold text-slate-700 text-[15px]">{book.title}</span>
-                                        <div className="flex items-center gap-1.5 text-slate-400 text-xs font-bold">
-                                            <User size={12} /> {book.author || 'Ẩn danh'}
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[11px] font-black uppercase tracking-tighter border border-blue-100">
-                                        <Tag size={10} /> {book.category || 'Chung'}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    {book.isFree ? (
-                                        <span className="text-[10px] font-black text-green-500 uppercase bg-green-50 px-2 py-1 rounded">Miễn phí</span>
-                                    ) : (
-                                        <span className="text-sm font-black text-amber-600">{formatCurrency(book.price)}</span>
-                                    )}
-                                </td>
-                                <td className="px-8 py-4 text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                        <button
-                                            title="Sửa thông tin"
-                                            onClick={(e) => { e.stopPropagation(); router.push(`/admin/dashboard/books/${book._id}`); }}
-                                            className="p-2 rounded-lg transition-colors text-slate-300 hover:text-blue-500 hover:bg-blue-50"
-                                        >
-                                            <Pencil size={16} />
-                                        </button>
-                                        <button
-                                            title="Xóa sách"
-                                            onClick={(e) => handleDelete(e, book._id, book.title)}
-                                            className="p-2 rounded-lg transition-colors text-slate-300 hover:text-red-500 hover:bg-red-50"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+        <div className="flex flex-col gap-5">
+            {/* Tabs */}
+            <div className="flex items-center gap-2">
+                <button onClick={() => switchMode('active')}
+                    className="px-5 py-2 rounded-xl font-bold text-sm transition-all border"
+                    style={{
+                        background: viewMode === 'active' ? '#3B0E1E' : '#FFFDF8',
+                        color: viewMode === 'active' ? '#C9A227' : '#7a3a46',
+                        borderColor: viewMode === 'active' ? '#3B0E1E' : '#E5D5B5',
+                    }}>
+                    Đang hoạt động
+                </button>
+                <button onClick={() => switchMode('deleted')}
+                    className="px-5 py-2 rounded-xl font-bold text-sm transition-all border flex items-center gap-2"
+                    style={{
+                        background: viewMode === 'deleted' ? '#7B1A1A' : '#FFFDF8',
+                        color: viewMode === 'deleted' ? '#fca5a5' : '#ef4444',
+                        borderColor: viewMode === 'deleted' ? '#7B1A1A' : '#fecdd3',
+                    }}>
+                    <Trash2 size={14}/> Thùng rác
+                </button>
+                <span className="text-xs ml-auto" style={{ color: '#9a7070' }}>
+                    <span className="font-black" style={{ color: '#3B0E1E' }}>{totalItems}</span> tài liệu
+                </span>
             </div>
+
+            {/* Table */}
+            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #E5D5B5', background: '#FFFDF8' }}>
+                {fetching ? (
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 size={28} className="animate-spin" style={{ color: '#C9A227' }}/>
+                    </div>
+                ) : books.length === 0 ? (
+                    <div className="text-center py-20 text-sm font-semibold" style={{ color: '#9a7070' }}>
+                        {viewMode === 'deleted' ? 'Thùng rác trống' : 'Chưa có sách nào'}
+                    </div>
+                ) : (
+                    <table className="w-full text-left border-collapse">
+                        <thead style={{ background: '#F9F5EE', borderBottom: '1px solid #E5D5B5' }}>
+                            <tr>
+                                <th className={thStyle} style={{ color: '#9a7070', width: 72 }}>Bìa</th>
+                                <th className={thStyle} style={{ color: '#9a7070' }}>Thông tin sách</th>
+                                <th className={`${thStyle} text-center`} style={{ color: '#9a7070' }}>Danh mục</th>
+                                <th className={`${thStyle} text-center`} style={{ color: '#9a7070' }}>Giá</th>
+                                <th className={`${thStyle} text-right`} style={{ color: '#9a7070' }}>
+                                    {viewMode === 'active' ? 'Thao tác' : 'Khôi phục / Xóa vĩnh viễn'}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {books.map((book, i) => (
+                                <tr key={book._id}
+                                    onClick={() => viewMode === 'active' && router.push(`/admin/dashboard/books/${book._id}`)}
+                                    className="transition-colors"
+                                    style={{
+                                        borderBottom: i < books.length - 1 ? '1px solid #F5EDD8' : 'none',
+                                        cursor: viewMode === 'active' ? 'pointer' : 'default',
+                                        opacity: viewMode === 'deleted' ? 0.8 : 1,
+                                    }}>
+                                    {/* Bìa */}
+                                    <td className="px-4 py-3">
+                                        <div className="w-12 h-16 rounded-lg overflow-hidden relative"
+                                             style={{ border: '1px solid #E5D5B5' }}>
+                                            <PdfThumbnail bookId={String(book._id)} token={getToken()} />
+                                        </div>
+                                    </td>
+                                    {/* Tên sách */}
+                                    <td className="px-4 py-3">
+                                        <p className="font-bold text-sm" style={{ color: '#3B0E1E', textDecoration: viewMode === 'deleted' ? 'line-through' : 'none' }}>
+                                            {book.title}
+                                        </p>
+                                        <p className="flex items-center gap-1 text-xs mt-0.5" style={{ color: '#9a7070' }}>
+                                            <User size={11}/> {book.author || 'Ẩn danh'}
+                                        </p>
+                                    </td>
+                                    {/* Danh mục */}
+                                    <td className="px-4 py-3 text-center">
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black"
+                                              style={{ background: '#F5EDD8', color: '#7a3a46', border: '1px solid #E5D5B5' }}>
+                                            <Tag size={9}/> {book.category || 'Chung'}
+                                        </span>
+                                    </td>
+                                    {/* Giá */}
+                                    <td className="px-4 py-3 text-center">
+                                        {book.isFree
+                                            ? <span className="text-[10px] font-black px-2 py-0.5 rounded" style={{ background: '#3B0E1E', color: '#C9A227' }}>FREE</span>
+                                            : <span className="text-xs font-black" style={{ color: '#C9A227' }}>{formatCurrency(book.price)}</span>}
+                                    </td>
+                                    {/* Actions */}
+                                    <td className="px-4 py-3 text-right">
+                                        {viewMode === 'active' ? (
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button title="Sửa thông tin"
+                                                    onClick={e => { e.stopPropagation(); router.push(`/admin/dashboard/books/${book._id}`); }}
+                                                    className="p-2 rounded-lg transition-all"
+                                                    style={{ color: '#3b82f6', border: '1px solid #bfdbfe', background: '#eff6ff' }}>
+                                                    <Pencil size={14}/>
+                                                </button>
+                                                <button title="Xóa mềm"
+                                                    onClick={e => handleSoftDelete(e, book._id, book.title)}
+                                                    className="p-2 rounded-lg transition-all"
+                                                    style={{ color: '#f97316', border: '1px solid #fed7aa', background: '#fff7ed' }}>
+                                                    <Trash2 size={14}/>
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button title="Khôi phục sách"
+                                                    onClick={e => handleRestore(e, book._id)}
+                                                    className="p-2 rounded-lg transition-all"
+                                                    style={{ color: '#22c55e', border: '1px solid #bbf7d0', background: '#f0fdf4' }}>
+                                                    <RefreshCcw size={14}/>
+                                                </button>
+                                                <button title="Xóa vĩnh viễn (xóa cứng)"
+                                                    onClick={e => handleHardDelete(e, book._id, book.title)}
+                                                    className="p-2 rounded-lg transition-all"
+                                                    style={{ color: '#ef4444', border: '1px solid #fecdd3', background: '#fff5f5' }}>
+                                                    <Flame size={14}/>
+                                                </button>
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2">
+                    <button onClick={() => fetchBooks(currentPage - 1)} disabled={currentPage === 1}
+                        className="p-2 rounded-lg transition-all disabled:opacity-40"
+                        style={{ border: '1px solid #E5D5B5', color: '#7a3a46', background: '#FFFDF8' }}>
+                        <ChevronLeft size={16}/>
+                    </button>
+                    <span className="text-xs font-semibold px-3" style={{ color: '#7a3a46' }}>
+                        Trang {currentPage} / {totalPages}
+                    </span>
+                    <button onClick={() => fetchBooks(currentPage + 1)} disabled={currentPage === totalPages}
+                        className="p-2 rounded-lg transition-all disabled:opacity-40"
+                        style={{ border: '1px solid #E5D5B5', color: '#7a3a46', background: '#FFFDF8' }}>
+                        <ChevronRight size={16}/>
+                    </button>
+                </div>
+            )}
+
+            {/* Legend */}
+            {viewMode === 'deleted' && (
+                <div className="flex items-center gap-4 text-xs px-1" style={{ color: '#9a7070' }}>
+                    <span className="flex items-center gap-1.5">
+                        <RefreshCcw size={12} style={{ color: '#22c55e' }}/> Khôi phục — sách sẽ hiện lại
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <Flame size={12} style={{ color: '#ef4444' }}/> Xóa vĩnh viễn — xóa luôn file PDF, không thể hoàn tác
+                    </span>
+                </div>
+            )}
         </div>
     );
 }
