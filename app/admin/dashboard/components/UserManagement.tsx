@@ -85,43 +85,58 @@ export default function UserManagement() {
 
             {/* THỐNG KÊ TỔNG QUAN (3 THẺ) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-[24px] border border-slate-200/60 shadow-sm flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center"><Users size={24} /></div>
+                <div className="p-6 rounded-2xl flex items-center gap-5"
+                     style={{ background: '#FFFDF8', border: '1px solid #E5D5B5' }}>
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center"
+                         style={{ background: '#F9F5EE', color: '#3B0E1E', border: '1px solid #E5D5B5' }}><Users size={24} /></div>
                     <div>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Tổng tài khoản</p>
-                        <h4 className="text-3xl font-black text-slate-800 leading-none">{totalUsers}</h4>
+                        <p className="text-xs font-black uppercase tracking-wider mb-1" style={{ color: '#9a7070' }}>Tổng tài khoản</p>
+                        <h4 className="text-3xl font-black leading-none" style={{ color: '#3B0E1E' }}>{totalUsers}</h4>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-[24px] border border-slate-200/60 shadow-sm flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center"><UserCheck size={24} /></div>
+                <div className="p-6 rounded-2xl flex items-center gap-5"
+                     style={{ background: '#FFFDF8', border: '1px solid #E5D5B5' }}>
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center"
+                         style={{ background: '#f0fdf4', color: '#22c55e', border: '1px solid #bbf7d0' }}><UserCheck size={24} /></div>
                     <div>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Đang hoạt động</p>
-                        <h4 className="text-3xl font-black text-slate-800 leading-none">{activeUsersCount}</h4>
+                        <p className="text-xs font-black uppercase tracking-wider mb-1" style={{ color: '#9a7070' }}>Đang hoạt động</p>
+                        <h4 className="text-3xl font-black leading-none" style={{ color: '#3B0E1E' }}>{activeUsersCount}</h4>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-[24px] border border-slate-200/60 shadow-sm flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center"><UserX size={24} /></div>
+                <div className="p-6 rounded-2xl flex items-center gap-5"
+                     style={{ background: '#FFFDF8', border: '1px solid #E5D5B5' }}>
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center"
+                         style={{ background: '#fff5f5', color: '#ef4444', border: '1px solid #fecdd3' }}><UserX size={24} /></div>
                     <div>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Đã đình chỉ</p>
-                        <h4 className="text-3xl font-black text-slate-800 leading-none">{deletedUsersCount}</h4>
+                        <p className="text-xs font-black uppercase tracking-wider mb-1" style={{ color: '#9a7070' }}>Đã đình chỉ</p>
+                        <h4 className="text-3xl font-black leading-none" style={{ color: '#3B0E1E' }}>{deletedUsersCount}</h4>
                     </div>
                 </div>
             </div>
 
             {/* THANH ĐIỀU HƯỚNG & TÌM KIẾM */}
-            <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-4 rounded-[24px] border border-slate-200/60 shadow-sm">
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-center p-4 rounded-2xl"
+                 style={{ background: '#FFFDF8', border: '1px solid #E5D5B5' }}>
 
                 {/* TABS CHUYỂN ĐỔI CHẾ ĐỘ XEM */}
-                <div className="flex p-1 bg-slate-50 rounded-2xl border border-slate-100 w-full md:w-auto">
+                <div className="flex p-1 rounded-xl w-full md:w-auto" style={{ background: '#F9F5EE', border: '1px solid #E5D5B5' }}>
                     <button
                         onClick={() => setViewMode('active')}
-                        className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${viewMode === 'active' ? 'bg-white text-blue-600 shadow-sm border border-slate-200/50' : 'text-slate-400 hover:text-slate-600'}`}
+                        className="flex-1 md:flex-none px-6 py-2.5 rounded-lg font-bold text-sm transition-all"
+                        style={{
+                            background: viewMode === 'active' ? '#3B0E1E' : 'transparent',
+                            color: viewMode === 'active' ? '#C9A227' : '#7a3a46',
+                        }}
                     >
                         Tài khoản hoạt động
                     </button>
                     <button
                         onClick={() => setViewMode('deleted')}
-                        className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${viewMode === 'deleted' ? 'bg-white text-red-500 shadow-sm border border-slate-200/50' : 'text-slate-400 hover:text-slate-600'}`}
+                        className="flex-1 md:flex-none px-6 py-2.5 rounded-lg font-bold text-sm transition-all"
+                        style={{
+                            background: viewMode === 'deleted' ? '#7B1A1A' : 'transparent',
+                            color: viewMode === 'deleted' ? '#fca5a5' : '#7a3a46',
+                        }}
                     >
                         Tài khoản bị đình chỉ
                     </button>
@@ -129,11 +144,12 @@ export default function UserManagement() {
 
                 {/* Ô TÌM KIẾM */}
                 <div className="relative w-full md:w-80">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: '#9a7070' }} size={18} />
                     <input
                         type="text"
                         placeholder="Tìm email thành viên..."
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all font-medium text-sm"
+                        className="w-full pl-11 pr-4 py-3 rounded-xl outline-none transition-all font-medium text-sm"
+                        style={{ background: '#F9F5EE', border: '1.5px solid #E5D5B5', color: '#3B0E1E' }}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -141,46 +157,53 @@ export default function UserManagement() {
             </div>
 
             {/* BẢNG DANH SÁCH */}
-            <div className="bg-white rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden">
+            <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFDF8', border: '1px solid #E5D5B5' }}>
                 <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50/50 border-b border-slate-100">
+                    <thead style={{ background: '#F9F5EE', borderBottom: '1px solid #E5D5B5' }}>
                         <tr>
-                            <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">Thông tin tài khoản</th>
-                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Tham gia</th>
-                            <th className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Trạng thái</th>
-                            <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">
+                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest" style={{ color: '#9a7070' }}>Thông tin tài khoản</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-center" style={{ color: '#9a7070' }}>Tham gia</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-center" style={{ color: '#9a7070' }}>Trạng thái</th>
+                            <th className="px-8 py-4 text-[10px] font-black uppercase tracking-widest text-right" style={{ color: '#9a7070' }}>
                                 {viewMode === 'active' ? 'Đình chỉ' : 'Khôi phục'}
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody>
                         {loading ? (
                             <tr>
                                 <td colSpan={4} className="py-20 text-center">
-                                    <Loader2 className="animate-spin mx-auto text-blue-500" />
+                                    <Loader2 className="animate-spin mx-auto" style={{ color: '#C9A227' }} />
                                 </td>
                             </tr>
                         ) : displayedUsers.length > 0 ? (
-                            displayedUsers.map((u) => (
-                                <tr key={u._id} className={`transition-colors group ${viewMode === 'active' ? 'hover:bg-slate-50/50' : 'hover:bg-red-50/30'}`}>
+                            displayedUsers.map((u, index) => (
+                                <tr key={u._id} className="transition-colors hover:bg-[#FAF7F2]"
+                                    style={{ borderBottom: index < displayedUsers.length - 1 ? '1px solid #F5EDD8' : 'none' }}>
                                     <td className="px-8 py-5">
                                         <div className="flex items-center gap-4">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border shadow-inner ${viewMode === 'active' ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-red-50 text-red-400 border-red-100'}`}>
+                                            <div className="w-10 h-10 rounded-full flex items-center justify-center font-black border"
+                                                 style={{
+                                                     background: viewMode === 'active' ? '#F9F5EE' : '#fff5f5',
+                                                     color: viewMode === 'active' ? '#3B0E1E' : '#ef4444',
+                                                     borderColor: viewMode === 'active' ? '#E5D5B5' : '#fecdd3',
+                                                 }}>
                                                 {u.email.charAt(0).toUpperCase()}
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className={`font-bold ${viewMode === 'active' ? 'text-slate-700' : 'text-red-500 line-through opacity-70'}`}>
+                                                <span className="font-bold"
+                                                      style={{ color: viewMode === 'active' ? '#3B0E1E' : '#ef4444', textDecoration: viewMode === 'deleted' ? 'line-through' : 'none' }}>
                                                     {u.email.split('@')[0]}
                                                 </span>
-                                                <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                                                <span className="text-[11px] font-medium flex items-center gap-1" style={{ color: '#9a7070' }}>
                                                     <Mail size={10} /> {u.email}
                                                 </span>
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 py-5 text-center">
-                                        <div className="text-xs font-bold text-slate-500 flex items-center justify-center gap-1">
-                                            <Calendar size={14} className="text-slate-300" />
+                                        <div className="text-xs font-bold flex items-center justify-center gap-1" style={{ color: '#7a3a46' }}>
+                                            <Calendar size={14} style={{ color: '#C9A227' }} />
                                             {u.createdAt ? new Date(u.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
                                         </div>
                                     </td>
@@ -199,7 +222,8 @@ export default function UserManagement() {
                                         {viewMode === 'active' ? (
                                             <button
                                                 onClick={() => handleSuspend(u._id, u.email)}
-                                                className="p-2 text-slate-300 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
+                                                className="p-2 rounded-lg transition-all"
+                                                style={{ color: '#f97316', border: '1px solid #fed7aa', background: '#fff7ed' }}
                                                 title="Đình chỉ tài khoản"
                                             >
                                                 <AlertCircle size={20} />
@@ -207,7 +231,8 @@ export default function UserManagement() {
                                         ) : (
                                             <button
                                                 onClick={() => handleRestore(u._id, u.email)}
-                                                className="p-2 text-slate-300 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                                                className="p-2 rounded-lg transition-all"
+                                                style={{ color: '#22c55e', border: '1px solid #bbf7d0', background: '#f0fdf4' }}
                                                 title="Khôi phục tài khoản"
                                             >
                                                 <RefreshCcw size={20} />
@@ -219,8 +244,8 @@ export default function UserManagement() {
                         ) : (
                             <tr>
                                 <td colSpan={4} className="py-24 text-center">
-                                    <div className="inline-flex flex-col items-center justify-center text-slate-400">
-                                        {viewMode === 'active' ? <Users size={48} className="opacity-20 mb-4" /> : <UserX size={48} className="opacity-20 mb-4" />}
+                                    <div className="inline-flex flex-col items-center justify-center" style={{ color: '#9a7070' }}>
+                                        {viewMode === 'active' ? <Users size={48} className="opacity-30 mb-4" /> : <UserX size={48} className="opacity-30 mb-4" />}
                                         <p className="font-bold uppercase tracking-widest text-sm">
                                             {viewMode === 'active' ? 'Không có tài khoản nào hoạt động' : 'Không có tài khoản nào bị đình chỉ'}
                                         </p>

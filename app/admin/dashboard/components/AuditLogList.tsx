@@ -9,6 +9,9 @@ const ACTION_ICON: Record<string, any> = {
     'Sửa thông tin sách':  { icon: Pencil,        color: '#3b82f6' },
     'Tải lại file PDF':    { icon: Upload,         color: '#8b5cf6' },
     'Xóa sách':            { icon: Trash2,         color: '#ef4444' },
+    'Xóa mềm sách':        { icon: Trash2,         color: '#ef4444' },
+    'Khôi phục sách':      { icon: ShieldCheck,    color: '#10b981' },
+    'Xóa vĩnh viễn sách':  { icon: Trash2,         color: '#991b1b' },
     'Đình chỉ tài khoản':  { icon: ShieldAlert,   color: '#f97316' },
     'Khôi phục tài khoản': { icon: ShieldCheck,   color: '#10b981' },
     'Thêm danh mục':       { icon: Tag,            color: '#06b6d4' },
@@ -100,6 +103,7 @@ export default function AuditLogList() {
                                 const actionConf = ACTION_ICON[log.action] || { icon: Pencil, color: '#9a7070' };
                                 const ActionIcon = actionConf.icon;
                                 const TargetIcon = TARGET_ICON[log.targetType] || BookOpen;
+                                const targetLabel = log.targetTitle || log.targetId || '';
                                 return (
                                     <tr key={log._id}
                                         style={{ borderBottom: i < logs.length - 1 ? '1px solid #F5EDD8' : 'none' }}
@@ -119,17 +123,26 @@ export default function AuditLogList() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span className="flex items-center gap-1.5 text-xs font-bold w-fit px-2.5 py-1 rounded-full"
-                                                  style={{ background: `${actionConf.color}15`, color: actionConf.color }}>
-                                                <ActionIcon size={11}/>
-                                                {log.action}
-                                            </span>
+                                            <div className="space-y-1.5">
+                                                <span className="flex items-center gap-1.5 text-xs font-bold w-fit px-2.5 py-1 rounded-full"
+                                                      style={{ background: `${actionConf.color}15`, color: actionConf.color }}>
+                                                    <ActionIcon size={11}/>
+                                                    {log.action}
+                                                </span>
+                                                {targetLabel && (
+                                                    <p className="text-[11px] font-semibold max-w-[220px] truncate"
+                                                       title={targetLabel}
+                                                       style={{ color: '#7a3a46' }}>
+                                                        {log.targetType}: {targetLabel}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#7a3a46' }}>
                                                 <TargetIcon size={13}/>
-                                                <span className="truncate max-w-[120px]" title={log.targetTitle}>
-                                                    {log.targetTitle || log.targetId}
+                                                <span className="truncate max-w-[180px]" title={targetLabel}>
+                                                    {targetLabel || '—'}
                                                 </span>
                                             </div>
                                         </td>
