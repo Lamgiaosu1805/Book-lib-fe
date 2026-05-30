@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -21,7 +21,7 @@ export default function UserLogin() {
         setErrorMsg(''); // Reset lỗi trước khi gọi API
 
         try {
-            const res = await axios.post('https://elib.tgphanoi.org/api/user/login', {
+            const res = await api.post('/user/login', {
                 email,
                 password,
             });

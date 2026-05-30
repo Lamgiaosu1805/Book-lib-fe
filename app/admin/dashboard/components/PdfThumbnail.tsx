@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { Image as ImageIcon } from 'lucide-react';
 
 // 1. Định nghĩa Props
@@ -24,7 +24,7 @@ const PdfThumbnail: React.FC<PdfThumbnailProps> = ({ bookId, token }) => {
             return;
         }
 
-        axios.get(`https://elib.tgphanoi.org/api/books/${bookId}/preview`, {
+        api.get(`/books/${bookId}/preview`, {
             headers: { 'Authorization': `Bearer ${token}` },
             responseType: 'blob'
         }).then(res => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { Trash2, FolderPlus, Folder, Loader2 } from 'lucide-react';
 
 export default function CategoryList() {
@@ -25,7 +25,7 @@ export default function CategoryList() {
         const token = getToken();
         if (!token) return;
         try {
-            const res = await axios.get('https://elib.tgphanoi.org/api/categories', {
+            const res = await api.get('/categories', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setCategories(res.data);
@@ -42,7 +42,7 @@ export default function CategoryList() {
         if (!name.trim()) return alert('Vui lòng nhập tên danh mục!');
         setLoading(true);
         try {
-            await axios.post('https://elib.tgphanoi.org/api/categories', { name }, {
+            await api.post('/categories', { name }, {
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             });
             setName('');
@@ -57,7 +57,7 @@ export default function CategoryList() {
     const handleDelete = async (id: string) => {
         if (!confirm('Bạn có chắc muốn xóa danh mục này?')) return;
         try {
-            await axios.delete(`https://elib.tgphanoi.org/api/categories/${id}`, {
+            await api.delete(`/categories/${id}`, {
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             });
             fetchCategories();

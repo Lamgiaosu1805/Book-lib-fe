@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { Upload, CheckCircle2 } from 'lucide-react';
 
 export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
@@ -37,7 +37,7 @@ export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
             const token = getToken();
             if (!token) return;
             try {
-                const res = await axios.get('https://elib.tgphanoi.org/api/categories', {
+                const res = await api.get('/categories', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setCategories(res.data);
@@ -66,7 +66,7 @@ export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
             formData.append('isFree', isFree);
             formData.append('price', isFree === 'true' ? '0' : price);
 
-            await axios.post('https://elib.tgphanoi.org/api/books/upload', formData, {
+            await api.post('/books/upload', formData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',

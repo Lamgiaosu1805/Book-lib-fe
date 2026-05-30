@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { X, Loader2 } from 'lucide-react';
 
 interface PdfViewerModalProps {
@@ -15,7 +15,7 @@ export default function PdfViewerModal({ bookId, token, onClose }: PdfViewerModa
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        axios.get(`https://elib.tgphanoi.org/api/books/${bookId}/view`, {
+        api.get(`/books/${bookId}/view`, {
             headers: { 'Authorization': `Bearer ${token}` },
             responseType: 'blob'
         }).then(res => {

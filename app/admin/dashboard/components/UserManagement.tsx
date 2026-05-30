@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { Trash2, Mail, Calendar, Loader2, Users, Search, UserCheck, AlertCircle, UserX, RefreshCcw } from 'lucide-react';
 
 export default function UserManagement() {
@@ -27,7 +27,7 @@ export default function UserManagement() {
         if (!token) return;
 
         try {
-            const res = await axios.get('https://elib.tgphanoi.org/api/user/admin/all', {
+            const res = await api.get('/user/admin/all', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setAllUsers(res.data);
@@ -46,7 +46,7 @@ export default function UserManagement() {
     const handleSuspend = async (id: string, email: string) => {
         if (!confirm(`Xác nhận đình chỉ tài khoản: ${email}?`)) return;
         try {
-            await axios.delete(`https://elib.tgphanoi.org/api/user/admin/${id}`, {
+            await api.delete(`/user/admin/${id}`, {
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             });
             fetchUsers();
@@ -59,7 +59,7 @@ export default function UserManagement() {
     const handleRestore = async (id: string, email: string) => {
         if (!confirm(`Xác nhận khôi phục tài khoản: ${email}?`)) return;
         try {
-            await axios.patch(`https://elib.tgphanoi.org/api/user/admin/${id}/restore`, {}, {
+            await api.patch(`/user/admin/${id}/restore`, {}, {
                 headers: { 'Authorization': `Bearer ${getToken()}` }
             });
             fetchUsers();

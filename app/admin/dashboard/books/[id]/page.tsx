@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { useRouter, useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { ArrowLeft, User, Folder, Clock, FileText, Tag, Info, ShieldCheck } from 'lucide-react';
@@ -30,12 +30,12 @@ export default function BookDetailPage() {
         const bookId = params.id;
 
         // Lấy thông tin text
-        axios.get(`https://elib.tgphanoi.org/api/books/${bookId}`, {
+        api.get(`/books/${bookId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         }).then(res => setBook(res.data));
 
         // Lấy file PDF
-        axios.get(`https://elib.tgphanoi.org/api/books/${bookId}/view`, {
+        api.get(`/books/${bookId}/view`, {
             headers: { 'Authorization': `Bearer ${token}` },
             responseType: 'blob'
         }).then(res => {

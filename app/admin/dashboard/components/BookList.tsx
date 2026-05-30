@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Calendar, Trash2, ChevronLeft, ChevronRight, User, Tag } from 'lucide-react';
 import PdfThumbnail from './PdfThumbnail';
@@ -29,7 +29,7 @@ export default function BookList() {
         if (!token) return;
         setFetching(true);
         try {
-            const res = await axios.get(`https://elib.tgphanoi.org/api/books?page=${page}&limit=${limit}`, {
+            const res = await api.get(`/books?page=${page}&limit=${limit}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setBooks(res.data.items || []);

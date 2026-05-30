@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLogin() {
@@ -15,7 +15,7 @@ export default function AdminLogin() {
         setLoading(true);
 
         try {
-            const res = await axios.post('https://elib.tgphanoi.org/api/admin/login', {
+            const res = await api.post('/admin/login', {
                 email,
                 password,
             });
