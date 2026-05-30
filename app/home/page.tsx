@@ -134,9 +134,10 @@ export default function HomePage() {
                                 color: activeTab === key ? '#C9A227' : '#9a6070',
                                 border: activeTab === key ? '1px solid rgba(201,162,39,0.3)' : '1px solid transparent',
                             }}>
-                            {icon} {label}
-                            {badge && badge > 0 && (
-                                <span className="ml-auto text-[9px] font-black px-1.5 py-0.5 rounded-full"
+                            <span className="shrink-0">{icon}</span>
+                            <span className="flex-1 min-w-0 text-left truncate">{label}</span>
+                            {typeof badge === 'number' && badge > 0 && (
+                                <span className="shrink-0 text-[9px] font-black px-1.5 py-0.5 rounded-full"
                                       style={{ background: '#C9A227', color: '#3B0E1E' }}>{badge}</span>
                             )}
                         </button>

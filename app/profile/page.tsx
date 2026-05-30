@@ -129,14 +129,14 @@ export default function ProfilePage() {
                              style={{ background: 'linear-gradient(to right, transparent, #C9A227, transparent)' }}/>
                     </div>
 
-                    <div className="px-6 pb-6" style={{ background: '#FFFDF8' }}>
+                    <div className="px-6 py-6" style={{ background: '#FFFDF8' }}>
                         {/* Avatar + name */}
-                        <div className="flex items-end gap-4 -mt-7 mb-5">
+                        <div className="flex items-center gap-4 mb-5">
                             <div className="w-14 h-14 rounded-full flex items-center justify-center font-black text-xl text-white shrink-0"
                                  style={{ background: '#3B0E1E', border: '3px solid #C9A227', boxShadow: '0 4px 12px rgba(59,14,30,0.3)' }}>
                                 {initial}
                             </div>
-                            <div className="mb-1 flex-1 min-w-0">
+                            <div className="flex-1 min-w-0">
                                 {editingName ? (
                                     <div className="flex items-center gap-2">
                                         <input type="text" value={displayName} onChange={e => setDisplayName(e.target.value)}
