@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { CheckCircle2, AlertCircle, Loader2, UserPlus } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, UserPlus, ShieldOff, RefreshCcw } from 'lucide-react';
+import { jwtDecode } from 'jwt-decode';
 
 export default function AdminManagement() {
     const [admins, setAdmins] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -24,6 +26,13 @@ export default function AdminManagement() {
         return '';
     };
 
+    const getCurrentAdminId = () => {
+        try {
+            const decoded: any = jwtDecode(getToken());
+            return decoded.id || '';
+        } catch { return ''; }
+    };
+
     const showToast = (type: 'success' | 'error', msg: string) => {
         setToast({ type, msg });
         setTimeout(() => setToast(null), 3500);
@@ -37,7 +46,34 @@ export default function AdminManagement() {
         finally { setLoading(false); }
     };
 
-    useEffect(() => { fetchAdmins(); }, []);
+    useEffect(() => {
+        try {
+            const decoded: any = jwtDecode(getToken());
+            setIsSuperAdmin(decoded.isSuperAdmin === true);
+        } catch {}
+        fetchAdmins();
+    }, []);
+
+    const handleSoftDelete = async (id: string, name: string) => {
+        if (!confirm(`Đình chỉ tài khoản admin "${name}"?`)) return;
+        try {
+            await api.delete(`/admin/${id}`, { headers: { Authorization: `Bearer ${getToken()}` } });
+            showToast('success', 'Đã đình chỉ tài khoản');
+            fetchAdmins();
+        } catch (err: any) {
+            showToast('error', err.response?.data?.message || 'Có lỗi xảy ra');
+        }
+    };
+
+    const handleRestore = async (id: string) => {
+        try {
+            await api.patch(`/admin/${id}/restore`, {}, { headers: { Authorization: `Bearer ${getToken()}` } });
+            showToast('success', 'Đã khôi phục tài khoản');
+            fetchAdmins();
+        } catch (err: any) {
+            showToast('error', err.response?.data?.message || 'Có lỗi xảy ra');
+        }
+    };
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -139,15 +175,26 @@ export default function AdminManagement() {
                     <div className="space-y-3">
                         {admins.map(admin => {
                             const fullName = [admin.saintName, admin.displayName].filter(Boolean).join(' ') || admin.email;
+                            const isMe = getCurrentAdminId() === admin._id;
                             return (
-                                <div key={admin._id} className="flex items-center gap-3 p-3 rounded-xl"
-                                     style={{ background: '#F9F5EE', border: '1px solid #E5D5B5' }}>
+                                <div key={admin._id} className="flex items-center gap-3 p-3 rounded-xl transition-all"
+                                     style={{
+                                         background: admin.isDeleted ? '#FFF5F5' : '#F9F5EE',
+                                         border: `1px solid ${admin.isDeleted ? '#FECDD3' : '#E5D5B5'}`,
+                                         opacity: admin.isDeleted ? 0.75 : 1,
+                                     }}>
                                     <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-white shrink-0"
-                                         style={{ background: '#3B0E1E', border: '2px solid #C9A227' }}>
+                                         style={{ background: admin.isDeleted ? '#9a7070' : '#3B0E1E', border: `2px solid ${admin.isSuperAdmin ? '#C9A227' : '#E5D5B5'}` }}>
                                         {fullName.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-sm truncate" style={{ color: '#3B0E1E' }}>{fullName}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-bold text-sm truncate" style={{ color: admin.isDeleted ? '#9a7070' : '#3B0E1E',  textDecoration: admin.isDeleted ? 'line-through' : 'none' }}>{fullName}</p>
+                                            {admin.isSuperAdmin && (
+                                                <span className="text-[9px] font-black px-1.5 py-0.5 rounded shrink-0"
+                                                      style={{ background: '#3B0E1E', color: '#C9A227' }}>HỆ THỐNG</span>
+                                            )}
+                                        </div>
                                         <p className="text-xs truncate" style={{ color: '#9a7070' }}>{admin.email}</p>
                                         {admin.saintName && (
                                             <p className="text-[10px] font-semibold italic" style={{ color: '#C9A227' }}>
@@ -155,10 +202,25 @@ export default function AdminManagement() {
                                             </p>
                                         )}
                                     </div>
-                                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0"
-                                          style={{ background: 'rgba(201,162,39,0.15)', color: '#C9A227', border: '1px solid rgba(201,162,39,0.3)' }}>
-                                        ADMIN
-                                    </span>
+
+                                    {/* Nút hành động — chỉ super admin thấy, không tự xóa mình */}
+                                    {isSuperAdmin && !isMe && !admin.isSuperAdmin && (
+                                        admin.isDeleted ? (
+                                            <button onClick={() => handleRestore(admin._id)}
+                                                className="p-2 rounded-lg transition-all"
+                                                title="Khôi phục"
+                                                style={{ color: '#22c55e', border: '1px solid #bbf7d0', background: '#f0fdf4' }}>
+                                                <RefreshCcw size={14}/>
+                                            </button>
+                                        ) : (
+                                            <button onClick={() => handleSoftDelete(admin._id, fullName)}
+                                                className="p-2 rounded-lg transition-all"
+                                                title="Đình chỉ"
+                                                style={{ color: '#ef4444', border: '1px solid #fecdd3', background: '#fff5f5' }}>
+                                                <ShieldOff size={14}/>
+                                            </button>
+                                        )
+                                    )}
                                 </div>
                             );
                         })}
