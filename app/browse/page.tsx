@@ -148,7 +148,7 @@ export default function BrowsePage() {
                     </div>
                 ) : filteredBooks.length === 0 ? (
                     <div className="text-center py-24" style={{ color: '#9a7070' }}>
-                        <Cross size={40} style={{ margin: '0 auto 12px', opacity: 0.2 }}/>
+                        <div style={{ margin: '0 auto 12px', opacity: 0.2, width: 'fit-content' }}><Cross size={40}/></div>
                         <p className="font-semibold">Không tìm thấy tài liệu phù hợp</p>
                     </div>
                 ) : (
