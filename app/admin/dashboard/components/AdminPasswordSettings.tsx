@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '@/lib/api';
-import { AlertCircle, CheckCircle2, Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Eye, EyeOff, KeyRound, Loader2, Mail, ShieldCheck, UserCircle } from 'lucide-react';
 
 type ApiError = {
     response?: {
@@ -12,7 +12,16 @@ type ApiError = {
     };
 };
 
+type AdminProfile = {
+    email?: string;
+    username?: string;
+    displayName?: string;
+    saintName?: string;
+    isSuperAdmin?: boolean;
+};
+
 export default function AdminPasswordSettings() {
+    const [profile, setProfile] = useState<AdminProfile | null>(null);
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -33,6 +42,21 @@ export default function AdminPasswordSettings() {
         setToast({ type, msg });
         setTimeout(() => setToast(null), 3500);
     };
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/admin/me', {
+                    headers: { Authorization: `Bearer ${getToken()}` },
+                });
+                setProfile(res.data);
+            } catch {
+                setProfile(null);
+            }
+        };
+
+        fetchProfile();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,8 +94,12 @@ export default function AdminPasswordSettings() {
         border: '1.5px solid #E5D5B5', background: '#F9F5EE', color: '#3B0E1E', fontSize: 13,
     };
 
+    const fullName = [profile?.saintName, profile?.displayName].filter(Boolean).join(' ');
+    const displayName = fullName || profile?.username || profile?.email || 'Quản trị viên';
+    const initial = displayName.charAt(0).toUpperCase();
+
     return (
-        <div className="max-w-xl">
+        <div className="max-w-3xl space-y-6">
             {toast && (
                 <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg font-semibold text-sm text-white"
                      style={{ background: toast.type === 'success' ? '#3B6E3B' : '#7B1A1A' }}>
@@ -79,6 +107,40 @@ export default function AdminPasswordSettings() {
                     {toast.msg}
                 </div>
             )}
+
+            <div className="rounded-2xl p-6" style={{ background: '#FFFDF8', border: '1px solid #E5D5B5' }}>
+                <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full flex items-center justify-center font-black text-lg shrink-0"
+                         style={{ background: '#3B0E1E', color: '#C9A227', border: '2px solid #E5D5B5' }}>
+                        {initial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <h3 className="font-black text-base truncate flex items-center gap-2" style={{ color: '#3B0E1E' }}>
+                            <UserCircle size={17}/> {displayName}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            {profile?.username && (
+                                <span className="text-[11px] font-bold px-2 py-1 rounded-lg"
+                                      style={{ background: '#F9F5EE', color: '#C9A227', border: '1px solid #E5D5B5' }}>
+                                    @{profile.username}
+                                </span>
+                            )}
+                            {profile?.email && (
+                                <span className="text-[11px] font-semibold flex items-center gap-1"
+                                      style={{ color: '#9a7070' }}>
+                                    <Mail size={11}/> {profile.email}
+                                </span>
+                            )}
+                            {profile?.isSuperAdmin && (
+                                <span className="text-[9px] font-black px-2 py-1 rounded-lg flex items-center gap-1"
+                                      style={{ background: '#3B0E1E', color: '#C9A227' }}>
+                                    <ShieldCheck size={10}/> SUPER ADMIN
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div className="rounded-2xl p-6" style={{ background: '#FFFDF8', border: '1px solid #E5D5B5' }}>
                 <h3 className="font-black text-base mb-1 flex items-center gap-2" style={{ color: '#3B0E1E' }}>
