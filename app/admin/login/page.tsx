@@ -42,7 +42,7 @@ export default function AdminLogin() {
             const decoded = jwtDecode<AdminToken>(res.data.data.accessToken);
             router.push(decoded.mustChangePassword ? '/admin/change-password' : '/admin/dashboard');
         } catch (err: unknown) {
-            setErrorMsg((err as ApiError).response?.data?.message || 'Thông tin đăng nhập không đúng');
+            setErrorMsg((err as ApiError).response?.data?.message || 'Sai tài khoản hoặc mật khẩu');
         } finally { setLoading(false); }
     };
 

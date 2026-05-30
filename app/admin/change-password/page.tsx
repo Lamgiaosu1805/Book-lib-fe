@@ -4,6 +4,7 @@ import { useState } from 'react';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react';
+import { ADMIN_PASSWORD_RULE, validateAdminPassword } from '../utils/passwordPolicy';
 
 type ApiError = {
     response?: {
@@ -40,8 +41,9 @@ export default function AdminChangePassword() {
             return;
         }
 
-        if (newPassword.length < 6) {
-            setErrorMsg('Mật khẩu mới phải có ít nhất 6 ký tự');
+        const passwordError = validateAdminPassword(newPassword);
+        if (passwordError) {
+            setErrorMsg(passwordError);
             return;
         }
 
@@ -79,6 +81,7 @@ export default function AdminChangePassword() {
                     </div>
                     <h1 className="font-black text-white text-lg">Đổi mật khẩu</h1>
                     <p className="text-xs mt-1" style={{ color: '#C9A227' }}>Yêu cầu cho lần đăng nhập đầu tiên</p>
+                    <p className="text-[11px] mt-2 text-center leading-relaxed" style={{ color: '#9a7070' }}>{ADMIN_PASSWORD_RULE}</p>
                 </div>
 
                 {errorMsg && (

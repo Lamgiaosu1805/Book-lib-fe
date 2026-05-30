@@ -10,8 +10,23 @@ api.interceptors.response.use(
   (res) => res,
   (error) => {
     if (typeof window !== 'undefined' && (error.response?.status === 401 || error.response?.status === 403)) {
-      document.cookie = 'user_token=; path=/; max-age=0';
-      window.location.href = '/login';
+      const requestUrl = String(error.config?.url || '');
+      const authRequestPaths = ['/admin/login', '/user/login', '/user/register'];
+      const isAuthRequest = authRequestPaths.some((path) => requestUrl.includes(path));
+
+      if (!isAuthRequest) {
+        if (window.location.pathname.startsWith('/admin')) {
+          document.cookie = 'token=; path=/; max-age=0';
+          if (window.location.pathname !== '/admin/login') {
+            window.location.href = '/admin/login';
+          }
+        } else {
+          document.cookie = 'user_token=; path=/; max-age=0';
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        }
+      }
     }
     return Promise.reject(error);
   },

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import { AlertCircle, CheckCircle2, Eye, EyeOff, KeyRound, Loader2, Mail, ShieldCheck, UserCircle } from 'lucide-react';
+import { ADMIN_PASSWORD_RULE, validateAdminPassword } from '../../utils/passwordPolicy';
 
 type ApiError = {
     response?: {
@@ -71,8 +72,9 @@ export default function AdminPasswordSettings() {
             return;
         }
 
-        if (newPassword.length < 6) {
-            showToast('error', 'Mật khẩu mới phải có ít nhất 6 ký tự');
+        const passwordError = validateAdminPassword(newPassword);
+        if (passwordError) {
+            showToast('error', passwordError);
             return;
         }
 
@@ -156,6 +158,7 @@ export default function AdminPasswordSettings() {
                     <div className="w-6 h-0.5" style={{ background: '#C9A227' }}/>
                     <p className="text-xs" style={{ color: '#9a7070' }}>Cập nhật mật khẩu tài khoản quản trị của bạn</p>
                 </div>
+                <p className="text-[11px] mb-4 leading-relaxed" style={{ color: '#9a7070' }}>{ADMIN_PASSWORD_RULE}</p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {[

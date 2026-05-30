@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
+import { PASSWORD_RULE, validatePassword } from '@/lib/passwordPolicy';
 
 const Cross = ({ size = 32 }: { size?: number }) => (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="currentColor">
@@ -35,6 +36,8 @@ export default function RegisterPage() {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         if (password !== confirmPassword) { setErrorMsg('Mật khẩu xác nhận không khớp!'); return; }
+        const passwordError = validatePassword(password);
+        if (passwordError) { setErrorMsg(passwordError); return; }
         setLoading(true); setErrorMsg('');
         try {
             await api.post('/user/register', { email, password });
@@ -164,6 +167,9 @@ export default function RegisterPage() {
                                     {showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
                                 </button>
                             </div>
+                            <p className="text-[11px] mt-1.5 leading-relaxed" style={{ color: '#9a7070' }}>
+                                {PASSWORD_RULE}
+                            </p>
                         </div>
 
                         <div>

@@ -140,7 +140,7 @@ export default function AdminManagement() {
     return (
         <>
         {dialog}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className={`grid grid-cols-1 gap-8 ${isSuperAdmin ? 'lg:grid-cols-2' : ''}`}>
             {toast && (
                 <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg font-semibold text-sm text-white"
                      style={{ background: toast.type === 'success' ? '#3B6E3B' : '#7B1A1A' }}>
@@ -149,62 +149,63 @@ export default function AdminManagement() {
                 </div>
             )}
 
-            {/* Form tạo admin mới */}
-            <div className="rounded-2xl p-6" style={{ background: '#FFFDF8', border: '1px solid #E5D5B5' }}>
-                <h3 className="font-black text-base mb-1" style={{ color: '#3B0E1E' }}>
-                    Tạo tài khoản quản trị viên
-                </h3>
-                <div className="flex items-center gap-2 mb-5">
-                    <div className="w-6 h-0.5" style={{ background: '#C9A227' }}/>
-                    <p className="text-xs" style={{ color: '#9a7070' }}>Điền đầy đủ thông tin bên dưới</p>
-                </div>
-
-                <form onSubmit={handleCreate} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                                   style={{ color: '#7a3a46' }}>Tên Thánh</label>
-                            <input type="text" required value={saintName} onChange={e => setSaintName(e.target.value)}
-                                placeholder="VD: Giuse, Phêrô, Maria..."
-                                style={inputStyle}/>
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                                   style={{ color: '#7a3a46' }}>Họ và Tên</label>
-                            <input type="text" required value={displayName} onChange={e => setDisplayName(e.target.value)}
-                                placeholder="VD: Nguyễn Văn A"
-                                style={inputStyle}/>
-                        </div>
+            {isSuperAdmin && (
+                <div className="rounded-2xl p-6" style={{ background: '#FFFDF8', border: '1px solid #E5D5B5' }}>
+                    <h3 className="font-black text-base mb-1" style={{ color: '#3B0E1E' }}>
+                        Tạo tài khoản quản trị viên
+                    </h3>
+                    <div className="flex items-center gap-2 mb-5">
+                        <div className="w-6 h-0.5" style={{ background: '#C9A227' }}/>
+                        <p className="text-xs" style={{ color: '#9a7070' }}>Điền đầy đủ thông tin bên dưới</p>
                     </div>
-                    {createdCredential && (
-                        <div className="rounded-xl p-4" style={{ background: '#F9F5EE', border: '1px solid #E5D5B5' }}>
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <KeyRound size={14} style={{ color: '#C9A227' }}/>
-                                        <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#7a3a46' }}>Thông tin đăng nhập tạm</p>
-                                    </div>
-                                    <p className="text-xs" style={{ color: '#3B0E1E' }}>Username: <span className="font-black">{createdCredential.username}</span></p>
-                                    <p className="text-xs" style={{ color: '#3B0E1E' }}>Mật khẩu tạm: <span className="font-black">{createdCredential.temporaryPassword}</span></p>
-                                </div>
-                                <button type="button" onClick={copyCredential}
-                                    className="p-2 rounded-lg shrink-0"
-                                    title="Sao chép"
-                                    style={{ color: '#3B0E1E', border: '1px solid #E5D5B5', background: '#FFFDF8' }}>
-                                    <Copy size={14}/>
-                                </button>
+
+                    <form onSubmit={handleCreate} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5"
+                                       style={{ color: '#7a3a46' }}>Tên Thánh</label>
+                                <input type="text" required value={saintName} onChange={e => setSaintName(e.target.value)}
+                                    placeholder="VD: Giuse, Phêrô, Maria..."
+                                    style={inputStyle}/>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5"
+                                       style={{ color: '#7a3a46' }}>Họ và Tên</label>
+                                <input type="text" required value={displayName} onChange={e => setDisplayName(e.target.value)}
+                                    placeholder="VD: Nguyễn Văn A"
+                                    style={inputStyle}/>
                             </div>
                         </div>
-                    )}
+                        {createdCredential && (
+                            <div className="rounded-xl p-4" style={{ background: '#F9F5EE', border: '1px solid #E5D5B5' }}>
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <KeyRound size={14} style={{ color: '#C9A227' }}/>
+                                            <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#7a3a46' }}>Thông tin đăng nhập tạm</p>
+                                        </div>
+                                        <p className="text-xs" style={{ color: '#3B0E1E' }}>Username: <span className="font-black">{createdCredential.username}</span></p>
+                                        <p className="text-xs" style={{ color: '#3B0E1E' }}>Mật khẩu tạm: <span className="font-black">{createdCredential.temporaryPassword}</span></p>
+                                    </div>
+                                    <button type="button" onClick={copyCredential}
+                                        className="p-2 rounded-lg shrink-0"
+                                        title="Sao chép"
+                                        style={{ color: '#3B0E1E', border: '1px solid #E5D5B5', background: '#FFFDF8' }}>
+                                        <Copy size={14}/>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
-                    <button type="submit" disabled={creating}
-                        className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
-                        style={{ background: creating ? '#9a4a5a' : '#3B0E1E', color: '#C9A227', boxShadow: '0 4px 15px rgba(59,14,30,0.2)' }}>
-                        {creating ? <Loader2 size={16} className="animate-spin"/> : <UserPlus size={16}/>}
-                        {creating ? 'Đang tạo...' : 'Tạo tài khoản'}
-                    </button>
-                </form>
-            </div>
+                        <button type="submit" disabled={creating}
+                            className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
+                            style={{ background: creating ? '#9a4a5a' : '#3B0E1E', color: '#C9A227', boxShadow: '0 4px 15px rgba(59,14,30,0.2)' }}>
+                            {creating ? <Loader2 size={16} className="animate-spin"/> : <UserPlus size={16}/>}
+                            {creating ? 'Đang tạo...' : 'Tạo tài khoản'}
+                        </button>
+                    </form>
+                </div>
+            )}
 
             {/* Danh sách admin */}
             <div className="rounded-2xl p-6" style={{ background: '#FFFDF8', border: '1px solid #E5D5B5' }}>

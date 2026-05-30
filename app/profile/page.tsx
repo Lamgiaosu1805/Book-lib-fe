@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Library, Calendar, CheckCircle2, AlertCircle, Pencil, X, Lock } from 'lucide-react';
+import { PASSWORD_RULE, validatePassword } from '@/lib/passwordPolicy';
 
 const Cross = ({ size = 16 }: { size?: number }) => (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="currentColor">
@@ -58,7 +59,8 @@ export default function ProfilePage() {
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
         if (newPassword !== confirmNew) { showToast('error', 'Mật khẩu xác nhận không khớp!'); return; }
-        if (newPassword.length < 6) { showToast('error', 'Mật khẩu mới phải có ít nhất 6 ký tự!'); return; }
+        const passwordError = validatePassword(newPassword);
+        if (passwordError) { showToast('error', passwordError); return; }
         setSaving(true);
         try {
             await api.patch('/user/profile/password', { oldPassword, newPassword }, { headers: { Authorization: `Bearer ${getToken()}` } });
@@ -195,6 +197,7 @@ export default function ProfilePage() {
                         <h3 className="font-black flex items-center gap-2 text-sm" style={{ color: '#3B0E1E' }}>
                             <Lock size={14} style={{ color: '#C9A227' }}/> Đổi mật khẩu
                         </h3>
+                        <p className="text-[11px] mt-2 leading-relaxed" style={{ color: '#9a7070' }}>{PASSWORD_RULE}</p>
                     </div>
                     <form onSubmit={handleChangePassword} className="p-6 space-y-4">
                         {[

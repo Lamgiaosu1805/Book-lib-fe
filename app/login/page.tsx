@@ -38,7 +38,7 @@ function LoginContent() {
             document.cookie = `user_token=${res.data.data.accessToken}; path=/; max-age=604800; samesite=lax`;
             router.push('/home');
         } catch (err: any) {
-            setErrorMsg(err.response?.data?.message || 'Email hoặc mật khẩu không đúng.');
+            setErrorMsg(err.response?.data?.message || 'Sai tài khoản hoặc mật khẩu');
         } finally { setLoading(false); }
     };
 
