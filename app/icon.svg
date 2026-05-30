@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Nền bo góc -->
+  <rect width="32" height="32" rx="7" fill="#3B0E1E"/>
+
+  <!-- Thân sách (trang phải) -->
+  <rect x="9" y="7" width="14" height="18" rx="2" fill="#5a1e2e"/>
+
+  <!-- Gáy sách -->
+  <rect x="9" y="7" width="3.5" height="18" rx="1.5" fill="#2a0a14"/>
+
+  <!-- Viền vàng sách -->
+  <rect x="9" y="7" width="14" height="18" rx="2" fill="none" stroke="#C9A227" stroke-width="0.8" stroke-opacity="0.6"/>
+
+  <!-- Thánh giá: cột dọc -->
+  <rect x="14.8" y="10.5" width="2.4" height="11" rx="1" fill="#C9A227"/>
+
+  <!-- Thánh giá: thanh ngang -->
+  <rect x="11.5" y="14" width="9" height="2.4" rx="1" fill="#C9A227"/>
+
+  <!-- Điểm sáng nhỏ góc trên phải -->
+  <circle cx="27" cy="5" r="2.5" fill="#C9A227" opacity="0.25"/>
+</svg>
