@@ -7,16 +7,22 @@ import BookList from './components/BookList';
 import AddBook from './components/AddBook';
 import CategoryList from './components/CategoryList';
 import UserManagement from './components/UserManagement';
+import AuditLogList from './components/AuditLogList';
+import AdminManagement from './components/AdminManagement';
 
-const tabConfig = {
-    list:       { title: 'Danh sách tài liệu',  sub: 'Quản lý toàn bộ sách và tài liệu trong hệ thống' },
-    add:        { title: 'Thêm tài liệu mới',    sub: 'Tải lên và cấu hình sách PDF mới'               },
-    categories: { title: 'Quản lý danh mục',     sub: 'Phân loại và tổ chức tài liệu theo chủ đề'      },
-    users:      { title: 'Quản lý người dùng',   sub: 'Xem và quản lý tài khoản thành viên hệ thống'   },
+type Tab = 'list' | 'add' | 'categories' | 'users' | 'logs' | 'admins';
+
+const tabConfig: Record<Tab, { title: string; sub: string }> = {
+    list:       { title: 'Danh sách tài liệu',   sub: 'Quản lý toàn bộ sách và tài liệu trong hệ thống' },
+    add:        { title: 'Thêm tài liệu mới',     sub: 'Tải lên và cấu hình sách PDF mới'               },
+    categories: { title: 'Quản lý danh mục',      sub: 'Phân loại và tổ chức tài liệu theo chủ đề'      },
+    users:      { title: 'Quản lý người dùng',    sub: 'Xem và quản lý tài khoản thành viên hệ thống'   },
+    logs:       { title: 'Nhật ký hoạt động',     sub: 'Theo dõi mọi thao tác của quản trị viên'        },
+    admins:     { title: 'Quản trị viên',         sub: 'Cấp tài khoản và quản lý nhóm quản trị viên'    },
 };
 
 export default function AdminDashboard() {
-    const [activeTab, setActiveTab] = useState<'list' | 'add' | 'categories' | 'users'>('list');
+    const [activeTab, setActiveTab] = useState<Tab>('list');
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const { title, sub } = tabConfig[activeTab];
 
@@ -26,7 +32,6 @@ export default function AdminDashboard() {
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onOpenLogout={() => setShowLogoutModal(true)} />
 
             <div className="flex-1 flex flex-col min-w-0">
-                {/* Page header */}
                 <div className="sticky top-0 z-30 px-8 py-4" style={{ background: '#FFFDF8', borderBottom: '1px solid #E5D5B5' }}>
                     <h1 className="text-lg font-black" style={{ color: '#3B0E1E' }}>{title}</h1>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -40,6 +45,8 @@ export default function AdminDashboard() {
                     {activeTab === 'add'        && <AddBook onSuccess={() => setActiveTab('list')} />}
                     {activeTab === 'categories' && <CategoryList />}
                     {activeTab === 'users'      && <UserManagement />}
+                    {activeTab === 'logs'       && <AuditLogList />}
+                    {activeTab === 'admins'     && <AdminManagement />}
                 </main>
             </div>
         </div>
