@@ -18,14 +18,17 @@ const PdfThumbnail: React.FC<PdfThumbnailProps> = ({ bookId, token }) => {
     const [loading, setLoading] = useState(!thumbnailCache[bookId]);
 
     useEffect(() => {
-        if (!token || !bookId) return;
+        if (!bookId) return;
 
         if (thumbnailCache[bookId]) {
             return;
         }
 
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         api.get(`/books/${bookId}/preview`, {
-            headers: { 'Authorization': `Bearer ${token}` },
+            headers,
             responseType: 'blob'
         }).then(res => {
             const url = URL.createObjectURL(res.data);
