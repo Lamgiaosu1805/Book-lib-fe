@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { LogOut, BookOpen, Library, Search, ShoppingCart, CheckCircle2, X, Loader2 } from 'lucide-react';
+import { LogOut, BookOpen, Library, Search, ShoppingCart, CheckCircle2, X, Loader2, UserCircle } from 'lucide-react';
 
 // Import Thumbnail
 import PdfThumbnail from '../admin/dashboard/components/PdfThumbnail';
@@ -135,9 +135,14 @@ export default function HomePage() {
                         </div>
                         <h1 className="text-xl font-black text-slate-800 tracking-tight">E-LIBRARY</h1>
                     </div>
-                    <button onClick={logout} className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-red-500 transition-colors px-4 py-2 rounded-lg hover:bg-red-50">
-                        <LogOut size={16} /> Đăng xuất
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => router.push('/profile')} className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors px-4 py-2 rounded-lg hover:bg-indigo-50">
+                            <UserCircle size={16} /> Hồ sơ
+                        </button>
+                        <button onClick={logout} className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-red-500 transition-colors px-4 py-2 rounded-lg hover:bg-red-50">
+                            <LogOut size={16} /> Đăng xuất
+                        </button>
+                    </div>
                 </div>
             </header>
 

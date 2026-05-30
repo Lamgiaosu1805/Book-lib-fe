@@ -32,7 +32,7 @@ export function middleware(req: NextRequest) {
       } catch {}
     }
 
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/browse", req.url));
   }
 
   // ================= ADMIN =================
@@ -64,6 +64,10 @@ export function middleware(req: NextRequest) {
   }
 
   // ================= USER =================
+  if (pathname === "/register" || pathname === "/browse" || pathname.startsWith("/auth")) {
+    return NextResponse.next();
+  }
+
   if (pathname === "/login") {
     if (userToken) {
       try {
@@ -74,6 +78,20 @@ export function middleware(req: NextRequest) {
       } catch {}
     }
     return NextResponse.next();
+  }
+
+  if (pathname.startsWith("/profile")) {
+    if (!userToken) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+    try {
+      const decoded: any = jwtDecode(userToken);
+      if (decoded.role !== "user" || (decoded.exp && decoded.exp < now)) {
+        return NextResponse.redirect(new URL("/login", req.url));
+      }
+    } catch {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
   }
 
   if (pathname.startsWith("/home")) {
@@ -95,5 +113,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/admin/:path*", "/home/:path*", "/login"],
+  matcher: ["/", "/admin/:path*", "/home/:path*", "/login", "/register", "/browse", "/profile/:path*"],
 };
