@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Search, LogOut, UserCircle, Library, Compass, X, Loader2, ShoppingCart, CheckCircle2, ChevronRight } from 'lucide-react';
 import PdfThumbnail from '../admin/dashboard/components/PdfThumbnail';
+import { useDialog } from '../components/Dialog';
 
 const SecurePdfViewerNoSSR = dynamic(() => import('../admin/dashboard/components/SecurePdfViewer'), { ssr: false });
 
@@ -30,6 +31,7 @@ export default function HomePage() {
     const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
     const [loadingPdf, setLoadingPdf] = useState(false);
     const [userName, setUserName] = useState('');
+    const { confirm, alert, error, dialog } = useDialog();
 
     const getToken = () => {
         if (typeof document === 'undefined') return '';
@@ -68,11 +70,15 @@ export default function HomePage() {
 
     const handleAddToLibrary = async (e: React.MouseEvent, bookId: string, isFree: boolean) => {
         e.stopPropagation();
-        if (!confirm(isFree ? 'Thêm sách vào tủ của bạn?' : 'Xác nhận mua cuốn sách này?')) return;
+        const ok = await confirm(
+            isFree ? 'Thêm sách vào tủ của bạn?' : 'Xác nhận mua cuốn sách này?',
+            { confirmText: isFree ? 'Thêm vào tủ' : 'Xác nhận mua' },
+        );
+        if (!ok) return;
         try {
             await api.post(`/user/library/add/${bookId}`, {}, { headers: { Authorization: `Bearer ${getToken()}` } });
             fetchData();
-        } catch (err: any) { alert(err.response?.data?.message || 'Có lỗi xảy ra'); }
+        } catch (err: any) { error(err.response?.data?.message || 'Có lỗi xảy ra'); }
     };
 
     const openReader = async (book: any, mode: 'preview' | 'full') => {
@@ -82,7 +88,7 @@ export default function HomePage() {
                 headers: { Authorization: `Bearer ${getToken()}` }, responseType: 'blob',
             });
             setPdfBlob(res.data);
-        } catch { alert('Không thể tải sách!'); setReadingBook(null); }
+        } catch { error('Không thể tải sách!'); setReadingBook(null); }
         finally { setLoadingPdf(false); }
     };
 
@@ -95,6 +101,8 @@ export default function HomePage() {
     );
 
     return (
+        <>
+        {dialog}
         <div className="flex min-h-screen font-sans" style={{ background: '#F9F5EE' }}>
             {/* SIDEBAR */}
             <aside className="w-56 flex flex-col sticky top-0 h-screen shrink-0" style={{ background: '#250A13' }}>
@@ -327,5 +335,6 @@ export default function HomePage() {
                 </div>
             )}
         </div>
+        </>
     );
 }

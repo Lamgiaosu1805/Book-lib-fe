@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import { useRouter, useParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { ArrowLeft, Save, Upload, Trash2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { useDialog } from '@/app/components/Dialog';
 
 const SecurePdfViewerNoSSR = dynamic(() => import('../../components/SecurePdfViewer'), { ssr: false });
 
@@ -28,6 +29,7 @@ export default function BookDetailPage() {
     const [newFile, setNewFile] = useState<File | null>(null);
 
     const [saving, setSaving] = useState(false);
+    const { confirm, dialog } = useDialog();
     const [uploadingFile, setUploadingFile] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
@@ -107,7 +109,11 @@ export default function BookDetailPage() {
     };
 
     const handleDelete = async () => {
-        if (!confirm(`Xác nhận xóa vĩnh viễn sách "${book?.title}"?\nHành động này không thể hoàn tác!`)) return;
+        const ok = await confirm('Hành động này không thể hoàn tác!', {
+            title: `Xóa mềm sách "${book?.title}"?`,
+            confirmText: 'Xóa mềm',
+        });
+        if (!ok) return;
         try {
             await api.delete(`/books/${bookId}`, { headers: { Authorization: `Bearer ${getToken()}` } });
             router.push('/admin/dashboard');
@@ -123,6 +129,8 @@ export default function BookDetailPage() {
     );
 
     return (
+        <>
+        {dialog}
         <div className="min-h-screen bg-[#F8F9FB] font-sans pb-20">
             {/* TOAST */}
             {toast && (
@@ -251,5 +259,6 @@ export default function BookDetailPage() {
                 </div>
             </div>
         </div>
+        </>
     );
 }

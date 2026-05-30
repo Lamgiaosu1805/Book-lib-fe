@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Trash2, ChevronLeft, ChevronRight, User, Tag, Pencil, RefreshCcw, Flame, Loader2 } from 'lucide-react';
+import { useDialog } from '@/app/components/Dialog';
 import PdfThumbnail from './PdfThumbnail';
 
 type ViewMode = 'active' | 'deleted';
@@ -17,6 +18,7 @@ export default function BookList() {
     const [totalItems, setTotalItems] = useState(0);
     const limit = 10;
     const router = useRouter();
+    const { confirm, alert, error, dialog } = useDialog();
 
     const getToken = () => {
         const ca = document.cookie.split(';');
@@ -55,12 +57,17 @@ export default function BookList() {
 
     const handleSoftDelete = async (e: React.MouseEvent, bookId: string, title: string) => {
         e.stopPropagation();
-        if (!confirm(`Xóa mềm sách "${title}"?\nSách sẽ bị ẩn nhưng vẫn có thể khôi phục lại.`)) return;
+        const ok = await confirm(`Xóa mềm sách "${title}"?\nSách sẽ bị ẩn nhưng vẫn có thể khôi phục lại.`, {
+            title: 'Xác nhận xóa mềm',
+            type: 'confirm',
+            confirmText: 'Xóa mềm',
+        });
+        if (!ok) return;
         try {
             await api.delete(`/books/${bookId}`, { headers: { Authorization: `Bearer ${getToken()}` } });
             fetchBooks(currentPage);
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Lỗi khi xóa sách');
+            error(err.response?.data?.message || 'Lỗi khi xóa sách');
         }
     };
 
@@ -70,18 +77,26 @@ export default function BookList() {
             await api.patch(`/books/${bookId}/restore`, {}, { headers: { Authorization: `Bearer ${getToken()}` } });
             fetchBooks(currentPage, 'deleted');
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Lỗi khi khôi phục sách');
+            error(err.response?.data?.message || 'Lỗi khi khôi phục sách');
         }
     };
 
     const handleHardDelete = async (e: React.MouseEvent, bookId: string, title: string) => {
         e.stopPropagation();
-        if (!confirm(`⚠️ XÓA VĨNH VIỄN sách "${title}"?\n\nToàn bộ file PDF sẽ bị xóa khỏi máy chủ và KHÔNG THỂ khôi phục!`)) return;
+        const ok = await confirm(
+            `Toàn bộ file PDF sẽ bị xóa khỏi máy chủ và KHÔNG THỂ khôi phục!`,
+            {
+                title: `Xóa vĩnh viễn "${title}"?`,
+                type: 'confirm',
+                confirmText: 'Xóa vĩnh viễn',
+            },
+        );
+        if (!ok) return;
         try {
             await api.delete(`/books/${bookId}/permanent`, { headers: { Authorization: `Bearer ${getToken()}` } });
             fetchBooks(currentPage, 'deleted');
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Lỗi khi xóa vĩnh viễn');
+            error(err.response?.data?.message || 'Lỗi khi xóa vĩnh viễn');
         }
     };
 
@@ -91,6 +106,8 @@ export default function BookList() {
     const thStyle = 'px-4 py-3 text-[10px] font-black uppercase tracking-widest text-left';
 
     return (
+        <>
+        {dialog}
         <div className="flex flex-col gap-5">
             {/* Tabs */}
             <div className="flex items-center gap-2">
@@ -251,5 +268,6 @@ export default function BookList() {
                 </div>
             )}
         </div>
+        </>
     );
 }

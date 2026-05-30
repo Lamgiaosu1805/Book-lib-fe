@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { Upload, CheckCircle2 } from 'lucide-react';
+import { useDialog } from '@/app/components/Dialog';
 
 export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
     const [file, setFile] = useState<File | null>(null);
@@ -16,6 +17,7 @@ export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
     const [description, setDescription] = useState('');
     const [isFree, setIsFree] = useState('true');
     const [price, setPrice] = useState('');
+    const { alert, success, error, dialog } = useDialog();
 
     // State lưu danh sách Category để map ra Select
     const [categories, setCategories] = useState<any[]>([]);
@@ -49,9 +51,9 @@ export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
     }, []);
 
     const handleUpload = async () => {
-        if (!file || !title) return alert('Vui lòng nhập tiêu đề và chọn file PDF!');
-        if (!category) return alert('Vui lòng chọn danh mục cho sách!'); // Bắt lỗi chưa chọn DM
-        if (isFree === 'false' && !price) return alert('Vui lòng nhập giá tiền cho sách trả phí!');
+        if (!file || !title) { alert('Vui lòng nhập tiêu đề và chọn file PDF!'); return; }
+        if (!category) { alert('Vui lòng chọn danh mục cho sách!'); return; }
+        if (isFree === 'false' && !price) { alert('Vui lòng nhập giá tiền cho sách trả phí!'); return; }
 
         const token = getToken();
         setLoading(true);
@@ -73,18 +75,20 @@ export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
                 },
             });
 
-            alert('Thêm sách thành công!');
+            success('Thêm sách thành công!');
             setTitle(''); setAuthor(''); setCategory(''); setPublishedYear('');
             setDescription(''); setPrice(''); setFile(null);
             onSuccess();
-        } catch (err: any) {
-            alert('Có lỗi xảy ra khi upload sách');
+        } catch {
+            error('Có lỗi xảy ra khi upload sách');
         } finally {
             setLoading(false);
         }
     };
 
     return (
+        <>
+        {dialog}
         <div className="max-w-4xl bg-white rounded-[24px] shadow-sm border border-slate-200/60 p-10">
             <div className="space-y-8">
 
@@ -161,7 +165,7 @@ export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
                 <div className="space-y-2">
                     <label className="text-[13px] font-bold text-slate-700 uppercase tracking-wider ml-1">Tài liệu PDF <span className="text-red-500">*</span></label>
                     <div className="relative border-2 border-dashed border-slate-200 rounded-[20px] p-12 transition-all text-center hover:border-blue-400 hover:bg-blue-50/30 group">
-                        <input type="file" accept="application/pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f && f.type === 'application/pdf') setFile(f); else { alert('Chỉ chấp nhận PDF!'); e.target.value = ''; } }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                        <input type="file" accept="application/pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f && f.type === 'application/pdf') setFile(f); else { alert('Chỉ chấp nhận file PDF!'); e.target.value = ''; } }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                         <div className="space-y-3">
                             <div className={`mx-auto w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform ${file ? 'bg-green-500 text-white' : 'bg-slate-50 text-blue-500'}`}>{file ? <CheckCircle2 size={28} /> : <Upload size={28} />}</div>
                             <div><p className="text-base font-bold text-slate-700 leading-tight">{file ? file.name : 'Chọn tập tin PDF'}</p><p className="text-[11px] text-slate-400 font-bold uppercase tracking-tighter mt-1">Dung lượng tối đa 50MB</p></div>
@@ -172,5 +176,6 @@ export default function AddBook({ onSuccess }: { onSuccess: () => void }) {
                 <button onClick={handleUpload} disabled={loading} className={`w-full py-4.5 rounded-2xl font-black text-white text-base shadow-xl transition-all active:scale-[0.98] ${loading ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'}`}>{loading ? 'ĐANG XỬ LÝ...' : 'THÊM SÁCH VÀO KHO'}</button>
             </div>
         </div>
+        </>
     );
 }

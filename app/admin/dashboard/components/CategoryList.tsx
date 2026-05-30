@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { Trash2, FolderPlus, Folder, Loader2, RefreshCcw, Flame } from 'lucide-react';
+import { useDialog } from '@/app/components/Dialog';
 
 type ViewMode = 'active' | 'deleted';
 
@@ -12,6 +13,7 @@ export default function CategoryList() {
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [viewMode, setViewMode] = useState<ViewMode>('active');
+    const { confirm, alert, error, success, dialog } = useDialog();
 
     const getToken = () => {
         const ca = document.cookie.split(';');
@@ -39,26 +41,27 @@ export default function CategoryList() {
     useEffect(() => { fetchCategories(viewMode); }, [viewMode]);
 
     const handleAdd = async () => {
-        if (!name.trim()) return alert('Vui lòng nhập tên danh mục!');
+        if (!name.trim()) { alert('Vui lòng nhập tên danh mục!'); return; }
         setLoading(true);
         try {
             await api.post('/categories', { name }, { headers: { Authorization: `Bearer ${getToken()}` } });
             setName('');
             fetchCategories('active');
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Lỗi thêm danh mục');
+            error(err.response?.data?.message || 'Lỗi thêm danh mục');
         } finally {
             setLoading(false);
         }
     };
 
     const handleSoftDelete = async (id: string, catName: string) => {
-        if (!confirm(`Xóa mềm danh mục "${catName}"?`)) return;
+        const ok = await confirm(`Xóa mềm danh mục "${catName}"?`, { title: 'Xác nhận xóa', confirmText: 'Xóa mềm' });
+        if (!ok) return;
         try {
             await api.delete(`/categories/${id}`, { headers: { Authorization: `Bearer ${getToken()}` } });
             fetchCategories('active');
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Lỗi xóa danh mục');
+            error(err.response?.data?.message || 'Lỗi xóa danh mục');
         }
     };
 
@@ -67,21 +70,28 @@ export default function CategoryList() {
             await api.patch(`/categories/${id}/restore`, {}, { headers: { Authorization: `Bearer ${getToken()}` } });
             fetchCategories('deleted');
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Lỗi khôi phục danh mục');
+            error(err.response?.data?.message || 'Lỗi khôi phục danh mục');
         }
     };
 
     const handleHardDelete = async (id: string, catName: string) => {
-        if (!confirm(`⚠️ XÓA VĨNH VIỄN danh mục "${catName}"?\nKhông thể hoàn tác!`)) return;
+        const ok = await confirm(`Không thể hoàn tác!`, {
+            title: `Xóa vĩnh viễn "${catName}"?`,
+            type: 'confirm',
+            confirmText: 'Xóa vĩnh viễn',
+        });
+        if (!ok) return;
         try {
             await api.delete(`/categories/${id}/permanent`, { headers: { Authorization: `Bearer ${getToken()}` } });
             fetchCategories('deleted');
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Lỗi xóa vĩnh viễn');
+            error(err.response?.data?.message || 'Lỗi xóa vĩnh viễn');
         }
     };
 
     return (
+        <>
+        {dialog}
         <div className="flex flex-col md:flex-row gap-8">
             {/* CỘT TRÁI: FORM THÊM MỚI */}
             <div className="w-full md:w-1/3">
@@ -215,5 +225,6 @@ export default function CategoryList() {
                 )}
             </div>
         </div>
+        </>
     );
 }

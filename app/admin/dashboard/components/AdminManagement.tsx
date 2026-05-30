@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { CheckCircle2, AlertCircle, Loader2, UserPlus, ShieldOff, RefreshCcw } from 'lucide-react';
+import { useDialog } from '@/app/components/Dialog';
 import { jwtDecode } from 'jwt-decode';
 
 export default function AdminManagement() {
@@ -11,6 +12,7 @@ export default function AdminManagement() {
     const [creating, setCreating] = useState(false);
     const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+    const { confirm, dialog } = useDialog();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -55,7 +57,8 @@ export default function AdminManagement() {
     }, []);
 
     const handleSoftDelete = async (id: string, name: string) => {
-        if (!confirm(`Đình chỉ tài khoản admin "${name}"?`)) return;
+        const ok = await confirm(`Đình chỉ tài khoản admin "${name}"?`, { title: 'Xác nhận đình chỉ', confirmText: 'Đình chỉ' });
+        if (!ok) return;
         try {
             await api.delete(`/admin/${id}`, { headers: { Authorization: `Bearer ${getToken()}` } });
             showToast('success', 'Đã đình chỉ tài khoản');
@@ -97,6 +100,8 @@ export default function AdminManagement() {
     };
 
     return (
+        <>
+        {dialog}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {toast && (
                 <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg font-semibold text-sm text-white"
@@ -189,18 +194,18 @@ export default function AdminManagement() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <p className="font-bold text-sm truncate" style={{ color: admin.isDeleted ? '#9a7070' : '#3B0E1E',  textDecoration: admin.isDeleted ? 'line-through' : 'none' }}>{fullName}</p>
+                                            <p className="font-bold text-sm truncate" style={{ color: admin.isDeleted ? '#9a7070' : '#3B0E1E', textDecoration: admin.isDeleted ? 'line-through' : 'none' }}>{fullName}</p>
                                             {admin.isSuperAdmin && (
                                                 <span className="text-[9px] font-black px-1.5 py-0.5 rounded shrink-0"
                                                       style={{ background: '#3B0E1E', color: '#C9A227' }}>HỆ THỐNG</span>
                                             )}
                                         </div>
-                                        <p className="text-xs truncate" style={{ color: '#9a7070' }}>{admin.email}</p>
-                                        {admin.saintName && (
-                                            <p className="text-[10px] font-semibold italic" style={{ color: '#C9A227' }}>
-                                                Tên Thánh: {admin.saintName}
+                                        {admin.username && (
+                                            <p className="text-[11px] font-bold" style={{ color: '#C9A227' }}>
+                                                @{admin.username}
                                             </p>
                                         )}
+                                        <p className="text-xs truncate" style={{ color: '#9a7070' }}>{admin.email}</p>
                                     </div>
 
                                     {/* Nút hành động — chỉ super admin thấy, không tự xóa mình */}
@@ -228,5 +233,6 @@ export default function AdminManagement() {
                 )}
             </div>
         </div>
+        </>
     );
 }

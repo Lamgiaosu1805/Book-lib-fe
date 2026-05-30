@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { Trash2, Mail, Calendar, Loader2, Users, Search, UserCheck, AlertCircle, UserX, RefreshCcw } from 'lucide-react';
+import { useDialog } from '@/app/components/Dialog';
 
 export default function UserManagement() {
     const [allUsers, setAllUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [viewMode, setViewMode] = useState<'active' | 'deleted'>('active'); // Chế độ xem hiện tại
+    const [viewMode, setViewMode] = useState<'active' | 'deleted'>('active');
+    const { confirm, error, dialog } = useDialog();
 
     const getToken = () => {
         const name = "token=";
@@ -42,29 +44,25 @@ export default function UserManagement() {
         fetchUsers();
     }, []);
 
-    // ✅ ĐÌNH CHỈ (SOFT DELETE)
     const handleSuspend = async (id: string, email: string) => {
-        if (!confirm(`Xác nhận đình chỉ tài khoản: ${email}?`)) return;
+        const ok = await confirm(`Đình chỉ tài khoản "${email}"?`, { title: 'Xác nhận đình chỉ', confirmText: 'Đình chỉ' });
+        if (!ok) return;
         try {
-            await api.delete(`/user/admin/${id}`, {
-                headers: { 'Authorization': `Bearer ${getToken()}` }
-            });
+            await api.delete(`/user/admin/${id}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
             fetchUsers();
-        } catch (err) {
-            alert('Lỗi khi đình chỉ người dùng');
+        } catch {
+            error('Lỗi khi đình chỉ người dùng');
         }
     };
 
-    // ✅ KHÔI PHỤC (RESTORE)
     const handleRestore = async (id: string, email: string) => {
-        if (!confirm(`Xác nhận khôi phục tài khoản: ${email}?`)) return;
+        const ok = await confirm(`Khôi phục tài khoản "${email}"?`, { title: 'Xác nhận khôi phục', confirmText: 'Khôi phục' });
+        if (!ok) return;
         try {
-            await api.patch(`/user/admin/${id}/restore`, {}, {
-                headers: { 'Authorization': `Bearer ${getToken()}` }
-            });
+            await api.patch(`/user/admin/${id}/restore`, {}, { headers: { 'Authorization': `Bearer ${getToken()}` } });
             fetchUsers();
-        } catch (err) {
-            alert('Lỗi khi khôi phục người dùng');
+        } catch {
+            error('Lỗi khi khôi phục người dùng');
         }
     };
 
@@ -81,6 +79,8 @@ export default function UserManagement() {
     });
 
     return (
+        <>
+        {dialog}
         <div className="space-y-6">
 
             {/* THỐNG KÊ TỔNG QUAN (3 THẺ) */}
@@ -233,5 +233,6 @@ export default function UserManagement() {
             </div>
 
         </div>
+        </>
     );
 }

@@ -13,7 +13,7 @@ const Cross = ({ size = 24 }: { size?: number }) => (
 );
 
 export default function AdminLogin() {
-    const [email, setEmail] = useState('');
+    const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -24,7 +24,7 @@ export default function AdminLogin() {
         e.preventDefault();
         setLoading(true); setErrorMsg('');
         try {
-            const res = await api.post('/admin/login', { email, password });
+            const res = await api.post('/admin/login', { identifier, password });
             document.cookie = `token=${res.data.data.accessToken}; path=/; max-age=604800; samesite=lax`;
             router.push('/admin/dashboard');
         } catch (err: any) {
@@ -66,9 +66,9 @@ export default function AdminLogin() {
                 <div className="rounded-2xl p-6" style={{ background: 'rgba(59,14,30,0.6)', border: '1px solid rgba(201,162,39,0.2)', backdropFilter: 'blur(10px)' }}>
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: '#C9A227' }}>Email</label>
-                            <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                                placeholder="admin@example.com"
+                            <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: '#C9A227' }}>Tên đăng nhập hoặc Email</label>
+                            <input type="text" required value={identifier} onChange={e => setIdentifier(e.target.value)}
+                                placeholder="lamnk hoặc admin@example.com"
                                 className="w-full px-4 py-3 rounded-xl outline-none text-sm transition-all"
                                 style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(201,162,39,0.2)', color: 'white' }}
                                 onFocus={e => { e.target.style.borderColor = 'rgba(201,162,39,0.6)'; e.target.style.background = 'rgba(255,255,255,0.1)'; }}
