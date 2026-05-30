@@ -5,9 +5,9 @@ import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Search, LogOut, UserCircle, Library, Compass, X, Loader2, ShoppingCart, CheckCircle2, ChevronRight } from 'lucide-react';
-import PdfThumbnail from './admin/dashboard/components/PdfThumbnail';
+import PdfThumbnail from '../admin/dashboard/components/PdfThumbnail';
 
-const SecurePdfViewerNoSSR = dynamic(() => import('./admin/dashboard/components/SecurePdfViewer'), { ssr: false });
+const SecurePdfViewerNoSSR = dynamic(() => import('../admin/dashboard/components/SecurePdfViewer'), { ssr: false });
 
 const Cross = ({ size = 16 }: { size?: number }) => (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="currentColor">
